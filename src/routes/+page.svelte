@@ -115,6 +115,7 @@
 </script>
 
 <div class="kicked-rotor">
+  <h1 class="title">The Kicked Rotor</h1>
   <div
     class="svg-container"
     onclick={handleCanvasClick}
@@ -167,10 +168,9 @@
     <!-- Axis Labels and Ticks -->
     <text x={WIDTH / 2} y={HEIGHT - 10} class="axis-label">θ</text>
     <text
-      x={15}
+      x={10}
       y={HEIGHT / 2}
-      class="axis-label"
-      transform="rotate(-90, 15, {HEIGHT / 2})">p</text
+      class="axis-label">p</text
     >
 
     <!-- p-axis ticks -->
@@ -180,7 +180,7 @@
       <text
         x={MARGIN - 10}
         {y}
-        class="tick-label"
+        class="tick-label y-axis-label"
         text-anchor="end"
         dominant-baseline="middle"
       >
@@ -203,7 +203,7 @@
       <text
         {x}
         y={HEIGHT - MARGIN + 20}
-        class="tick-label"
+        class="tick-label x-axis-label"
         text-anchor="middle"
       >
         {theta === 0
@@ -236,7 +236,8 @@
 
   <div class="controls">
     <div class="parameter-control">
-      <label for="k-param">K = {k.toFixed(2)}</label>
+      <div class="k-value">K = {k.toFixed(2)}</div>
+      <!-- <label for="k-param">K = {k.toFixed(2)}</label> -->
       <input
         id="k-param"
         type="range"
@@ -259,17 +260,42 @@
 </div>
 
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+
   .kicked-rotor {
     background: #1a1a2e;
     padding: 2rem;
     border-radius: 1rem;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
+    margin: auto;
+  }
+
+  .title {
+    font-family: 'Press Start 2P', cursive;
+    color: #00ff88;
+    text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88, 0 0 30px #00ff88;
+    margin-bottom: 1rem;
+  }
+
+  .svg-container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    justify-content: center;
   }
 
   .phase-space {
     background: #0f0f1a;
     border-radius: 0.5rem;
     overflow: hidden;
+    width: 100%;
+    height: auto;
   }
 
   .grid-line {
@@ -291,8 +317,14 @@
   .axis-label,
   .tick-label {
     fill: #8a8a9a;
-    font-size: 14px;
+    font-size: 15px;
     text-anchor: middle;
+    font-family: 'Roboto Mono', monospace;
+    user-select: none;
+  }
+
+  .y-axis-label {
+    transform: translateX(-10px);
   }
 
   .trajectory circle {
@@ -310,8 +342,10 @@
   .controls {
     margin-top: 1rem;
     display: flex;
-    gap: 2rem;
+    flex-direction: column;
+    gap: 1rem;
     align-items: center;
+    width: 100%;
   }
 
   .parameter-control {
@@ -319,10 +353,18 @@
     align-items: center;
     gap: 1rem;
     color: #8a8a9a;
+    flex-direction: column;
+  }
+
+  .k-value {
+    font-family: 'Press Start 2P', cursive;
+    color: #00ff88;
+    margin-bottom: 0.5rem;
   }
 
   input[type="range"] {
-    width: 200px;
+    width: 100%;
+    max-width: 200px;
     accent-color: #00ff88;
   }
 
@@ -331,6 +373,8 @@
     border-radius: 0.25rem;
     font-weight: bold;
     transition: all 0.3s;
+    text-align: center;
+    font-family: 'Press Start 2P', cursive;
   }
 
   .regular {
@@ -351,5 +395,10 @@
   :global(body) {
     background: #0f0f1a;
     color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
   }
 </style>
