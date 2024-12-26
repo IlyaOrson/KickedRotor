@@ -1,400 +1,355 @@
-<!-- KickedRotor.svelte -->
 <script lang="ts">
-    // Constants for SVG dimensions
-    const width = 800;
-    const height = 500;
-    const margin = 50;
 
-    // State using runes
-    let kParameter = $state(1.5);
-    let points = $state<[number, number][][]>([]);
-    let initialPoints = $state<[number, number][]>([]);  // Store initial conditions
-    let isAnimating = $state(false);
-    let animationInterval = $state<number | undefined>(undefined);
-    let selectedTrajectory = $state<number | null>(null);
-    let isAddingPoint = $state(true);  // Toggle for adding new points
+  // Types
+  type Point = [number, number]; // [theta, p]
+  type Trajectory = Point[];
 
-    // Computed values using runes
-    let chaosLevel = $derived(kParameter > 2.5 ? 'Chaotic' : kParameter > 1.5 ? 'Mixed' : 'Regular');
-    
-    // Colors
-    const colors = {
-        background: '#1a1a2e',
-        trajectoryColors: [
-            '#00ff9d', // cyan
-            '#ff0055', // magenta
-            '#ffcc00', // yellow
-            '#00ccff', // blue
-            '#ff6600'  // orange
-        ],
-        axes: '#4a4a6a',
-        text: '#ffffff'
-    };
+  // Constants
+  const WIDTH = 800;
+  const HEIGHT = 600;
+  const MARGIN = 50;
+  const NUM_TRAJECTORIES = 30;
+  const POINTS_PER_TRAJECTORY = 100;
+  const PI = Math.PI;
+  const TWO_PI = 2 * PI;
 
-    function fromSVGCoords(x: number, y: number): [number, number] {
-        const theta = ((x - margin) / (width - 2 * margin)) * 2 * Math.PI;
-        const p = ((y - margin) / (height - 2 * margin)) * 4 - 2;
-        return [theta, p];
+  // State
+  let k = $state(0.5);
+  let trajectories = $state<Trajectory[]>([]);
+  let clickTrajectory = $state<Trajectory | null>(null);
+
+  // Colors for trajectories
+  const colors = Array(NUM_TRAJECTORIES)
+    .fill(0)
+    .map((_, i) => `hsl(${(i * 360) / NUM_TRAJECTORIES}, 80%, 60%)`);
+
+  // State classification
+  let systemState = $derived(getSystemState(k));
+
+  function getSystemState(k: number): string {
+    if (k < 0.5) return "Regular";
+    if (k < 2.0) return "Mixed";
+    return "Chaotic";
+  }
+
+  // Helper functions
+  function mod(n: number, m: number): number {
+    return ((n % m) + m) % m;
+  }
+
+  function nextState(theta: number, p: number): Point {
+    const newP = mod(p + k * Math.sin(theta), TWO_PI) - PI; // Center around 0
+    const newTheta = mod(theta + newP, TWO_PI);
+    return [newTheta, newP];
+  }
+
+  function toSVGCoords(theta: number, p: number): Point {
+    const x = MARGIN + (theta / TWO_PI) * (WIDTH - 2 * MARGIN);
+    // Map p from [-π, π] to [HEIGHT - MARGIN, MARGIN]
+    const y = HEIGHT - (MARGIN + ((p + PI) / TWO_PI) * (HEIGHT - 2 * MARGIN));
+    return [x, y];
+  }
+
+  function generateTrajectory(
+    initialTheta: number,
+    initialP: number
+  ): Trajectory {
+    const trajectory: Trajectory = [];
+    let [theta, p] = [initialTheta, initialP];
+
+    for (let i = 0; i < POINTS_PER_TRAJECTORY; i++) {
+      trajectory.push([theta, p]);
+      [theta, p] = nextState(theta, p);
     }
 
-    function nextState(theta: number, p: number, k: number): [number, number] {
-        const newP = p + k * Math.sin(theta);
-        const newTheta = (theta + newP) % (2 * Math.PI);
-        return [newTheta, newP];
+    return trajectory;
+  }
+
+  function initializePhaseSpace() {
+    trajectories = Array(NUM_TRAJECTORIES)
+      .fill(0)
+      .map(() => {
+        const initialTheta = Math.random() * TWO_PI;
+        const initialP = Math.random() * TWO_PI - PI; // Range [-π, π]
+        return generateTrajectory(initialTheta, initialP);
+      });
+  }
+
+  function handleCanvasClick(event: MouseEvent) {
+    const rect = (event.target as SVGElement).getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    // Convert click coordinates to phase space
+    const theta = ((x - MARGIN) / (WIDTH - 2 * MARGIN)) * TWO_PI;
+    const p = -((y - MARGIN) / (HEIGHT - 2 * MARGIN)) * TWO_PI + PI;
+
+    clickTrajectory = generateTrajectory(theta, p);
+  }
+
+  function handleCanvasKeydown(event: KeyboardEvent) {
+    if (event.key === "Enter" || event.key === " ") {
+      const rect = (event.target as SVGElement).getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      const mouseEvent = new MouseEvent("click", {
+        clientX: x,
+        clientY: y,
+      });
+      handleCanvasClick(mouseEvent);
     }
+  }
 
-    function generateTrajectory(initialTheta: number, initialP: number, steps: number): [number, number][] {
-        let trajectory: [number, number][] = [];
-        let theta = initialTheta;
-        let p = initialP;
-        
-        for (let i = 0; i < steps; i++) {
-            trajectory.push([theta, p]);
-            [theta, p] = nextState(theta, p, kParameter);
-        }
-        
-        return trajectory;
+  function handleCanvasKeypress(event: KeyboardEvent) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
     }
+  }
 
-    function handlePhaseSpaceClick(event: MouseEvent) {
-        if (!isAddingPoint) return;
-        if (points.length >= 5) return; // Limit to 5 trajectories
-        
-        const rect = (event.currentTarget as SVGElement).getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        
-        const [theta, p] = fromSVGCoords(x, y);
-        
-        // Generate new trajectory
-        const newTrajectory = generateTrajectory(theta, p, 150);
-        points = [...points, newTrajectory];
-        initialPoints = [...initialPoints, [theta, p]];
-    }
-
-    function initializePhaseSpace() {
-        points = [];
-        initialPoints = [];
-    }
-
-    function toSVGCoords(theta: number, p: number): [number, number] {
-        const x = margin + (theta / (2 * Math.PI)) * (width - 2 * margin);
-        const y = margin + ((p + 2) / 4) * (height - 2 * margin);
-        return [x, y];
-    }
-
-    // Animation control with smoother transitions
-    $effect(() => {
-        if (isAnimating) {
-            animationInterval = setInterval(() => {
-                points = points.map(trajectory => {
-                    const [lastTheta, lastP] = trajectory[trajectory.length - 1];
-                    const [newTheta, newP] = nextState(lastTheta, lastP, kParameter);
-                    return [...trajectory.slice(1), [newTheta, newP]];
-                });
-            }, 30);
-        }
-        
-        return () => {
-            if (animationInterval !== undefined) {
-                clearInterval(animationInterval);
-                animationInterval = undefined;
-            }
-        };
-    });
-
-    // Initialize on component mount
-    $effect(() => {
-        initializePhaseSpace();
-    });
-
-    function handleTrajectoryHover(index: number) {
-        selectedTrajectory = index;
-    }
-
-    function handleTrajectoryLeave() {
-        selectedTrajectory = null;
-    }
-
-    function clearTrajectories() {
-        points = [];
-        initialPoints = [];
-        isAnimating = false;
-    }
+  // Initialize and update on k changes
+  $effect(() => {
+    initializePhaseSpace();
+    // Clear click trajectory when k changes
+    clickTrajectory = null;
+  });
 </script>
 
-<div class="container">
-    <div class="visualization-card">
-        <header>
-            <h2>Kicked Rotor Phase Space</h2>
-            <div class="system-state">
-                System State: <span class="state-indicator {chaosLevel.toLowerCase()}">{chaosLevel}</span>
-            </div>
-        </header>
+<div class="kicked-rotor">
+  <div
+    class="svg-container"
+    onclick={handleCanvasClick}
+    onkeydown={handleCanvasKeydown}
+    onkeypress={handleCanvasKeypress}
+    role="button"
+    tabindex="0"
+  >
+    <svg
+      width={WIDTH}
+      height={HEIGHT}
+      role="img"
+      aria-label="Phase space visualization"
+      class="phase-space"
+    >
+    <!-- Grid -->
+    {#each Array(10) as _, i}
+      <line
+        x1={MARGIN}
+        y1={MARGIN + (i * (HEIGHT - 2 * MARGIN)) / 9}
+        x2={WIDTH - MARGIN}
+        y2={MARGIN + (i * (HEIGHT - 2 * MARGIN)) / 9}
+        class="grid-line"
+      />
+      <line
+        x1={MARGIN + (i * (WIDTH - 2 * MARGIN)) / 9}
+        y1={MARGIN}
+        x2={MARGIN + (i * (WIDTH - 2 * MARGIN)) / 9}
+        y2={HEIGHT - MARGIN}
+        class="grid-line"
+      />
+    {/each}
 
-        <div class="visualization">
-            <svg {width} {height} on:click={handlePhaseSpaceClick}>
-                <!-- Grid -->
-                {#each Array(10) as _, i}
-                    <line 
-                        x1={margin} 
-                        y1={margin + i * (height - 2 * margin) / 9}
-                        x2={width - margin}
-                        y2={margin + i * (height - 2 * margin) / 9}
-                        class="grid-line"
-                    />
-                    <line 
-                        x1={margin + i * (width - 2 * margin) / 9}
-                        y1={margin}
-                        x2={margin + i * (width - 2 * margin) / 9}
-                        y2={height - margin}
-                        class="grid-line"
-                    />
-                {/each}
+    <!-- Axes -->
+    <line
+      x1={MARGIN}
+      y1={HEIGHT - MARGIN}
+      x2={WIDTH - MARGIN}
+      y2={HEIGHT - MARGIN}
+      class="axis"
+    />
+    <line
+      x1={MARGIN}
+      y1={MARGIN}
+      x2={MARGIN}
+      y2={HEIGHT - MARGIN}
+      class="axis"
+    />
 
-                <!-- Axes -->
-                <line 
-                    x1={margin} 
-                    y1={height - margin} 
-                    x2={width - margin} 
-                    y2={height - margin} 
-                    class="axis"
-                />
-                <line 
-                    x1={margin} 
-                    y1={margin} 
-                    x2={margin} 
-                    y2={height - margin} 
-                    class="axis"
-                />
-                
-                <!-- Axis labels -->
-                <text x={width/2} y={height - 10} class="axis-label">θ (Phase)</text>
-                <text x={20} y={height/2} class="axis-label" transform="rotate(-90, 20, {height/2})">p (Momentum)</text>
-                
-                <!-- Phase space points with trails -->
-                {#each points as trajectory, i}
-                    <g 
-                        on:mouseenter={() => handleTrajectoryHover(i)}
-                        on:mouseleave={handleTrajectoryLeave}
-                    >
-                        {#each trajectory as [theta, p], j}
-                            {@const [x, y] = toSVGCoords(theta, p)}
-                            <circle
-                                cx={x}
-                                cy={y}
-                                r={selectedTrajectory === i ? 2 : 1}
-                                class="point"
-                                style="
-                                    opacity: {(j / trajectory.length) * 0.8 + 0.2};
-                                    fill: {colors.trajectoryColors[i]};
-                                "
-                            />
-                        {/each}
-                    </g>
-                {/each}
+    <!-- Axis Labels and Ticks -->
+    <text x={WIDTH / 2} y={HEIGHT - 10} class="axis-label">θ</text>
+    <text
+      x={15}
+      y={HEIGHT / 2}
+      class="axis-label"
+      transform="rotate(-90, 15, {HEIGHT / 2})">p</text
+    >
 
-                <!-- Initial points -->
-                {#each initialPoints as [theta, p], i}
-                    {@const [x, y] = toSVGCoords(theta, p)}
-                    <circle
-                        cx={x}
-                        cy={y}
-                        r="4"
-                        class="initial-point"
-                        style="
-                            fill: {colors.trajectoryColors[i]};
-                            stroke: white;
-                            stroke-width: 1;
-                        "
-                    />
-                {/each}
-            </svg>
-        </div>
+    <!-- p-axis ticks -->
+    {#each [-PI, -PI / 2, 0, PI / 2, PI] as p, i}
+      {@const [_, y] = toSVGCoords(0, p)}
+      <line x1={MARGIN - 5} y1={y} x2={MARGIN} y2={y} class="tick" />
+      <text
+        x={MARGIN - 10}
+        {y}
+        class="tick-label"
+        text-anchor="end"
+        dominant-baseline="middle"
+      >
+        {p === 0
+          ? "0"
+          : `${p < 0 ? "-" : ""}π${Math.abs(p) !== PI ? "/2" : ""}`}
+      </text>
+    {/each}
 
-        <div class="controls">
-            <div class="button-group">
-                <button
-                    class="control-button {isAnimating ? 'active' : ''}"
-                    on:click={() => isAnimating = !isAnimating}
-                >
-                    {isAnimating ? '⏸ Pause' : '▶ Start'} Animation
-                </button>
-                
-                <button
-                    class="control-button {isAddingPoint ? 'active' : ''}"
-                    on:click={() => isAddingPoint = !isAddingPoint}
-                >
-                    {isAddingPoint ? '✏️ Adding Points' : '🖱️ Click to Add Points'}
-                </button>
+    <!-- θ-axis ticks -->
+    {#each [0, PI / 2, PI, (3 * PI) / 2, TWO_PI] as theta, i}
+      {@const [x, _] = toSVGCoords(theta, 0)}
+      <line
+        x1={x}
+        y1={HEIGHT - MARGIN}
+        x2={x}
+        y2={HEIGHT - MARGIN + 5}
+        class="tick"
+      />
+      <text
+        {x}
+        y={HEIGHT - MARGIN + 20}
+        class="tick-label"
+        text-anchor="middle"
+      >
+        {theta === 0
+          ? "0"
+          : `${theta === TWO_PI ? "2" : ""}π${theta !== PI && theta !== TWO_PI ? "/2" : ""}`}
+      </text>
+    {/each}
 
-                <button
-                    class="control-button clear"
-                    on:click={clearTrajectories}
-                >
-                    🗑️ Clear All
-                </button>
-            </div>
-            
-            <div class="parameter-control">
-                <label for="k-parameter">Kicking Strength (K)</label>
-                <input
-                    id="k-parameter"
-                    type="range"
-                    min="0"
-                    max="5"
-                    step="0.1"
-                    bind:value={kParameter}
-                />
-                <span class="parameter-value">K = {kParameter.toFixed(2)}</span>
-            </div>
-        </div>
+    <!-- Trajectories -->
+    {#each trajectories as trajectory, i}
+      <g class="trajectory" style="--trajectory-color: {colors[i]}">
+        {#each trajectory as [theta, p]}
+          {@const [x, y] = toSVGCoords(theta, p)}
+          <circle cx={x} cy={y} r="1" />
+        {/each}
+      </g>
+    {/each}
 
-        <div class="instructions">
-            Click anywhere in the phase space to add up to 5 initial conditions. Each trajectory has its own color. Watch how they evolve differently based on their starting points!
-        </div>
-    </div>
+    <!-- Click Trajectory -->
+    {#if clickTrajectory}
+      <g class="click-trajectory">
+        {#each clickTrajectory as [theta, p]}
+          {@const [x, y] = toSVGCoords(theta, p)}
+          <circle cx={x} cy={y} r="1.5" />
+        {/each}
+      </g>
+    {/if}
+  </svg>
 </div>
 
-<style lang="postcss">
-    .container {
-        @apply flex justify-center items-center min-h-screen p-8;
-        background: linear-gradient(135deg, #0f0f1f 0%, #1a1a2e 100%);
-    }
+  <div class="controls">
+    <div class="parameter-control">
+      <label for="k-param">K = {k.toFixed(2)}</label>
+      <input
+        id="k-param"
+        type="range"
+        min="0"
+        max="5"
+        step="0.1"
+        bind:value={k}
+      />
+    </div>
 
-    .visualization-card {
-        @apply bg-opacity-90 backdrop-blur-lg rounded-xl shadow-2xl p-8;
-        background-color: rgba(26, 26, 46, 0.95);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
+    <div
+      class="system-state"
+      class:regular={systemState === "Regular"}
+      class:mixed={systemState === "Mixed"}
+      class:chaotic={systemState === "Chaotic"}
+    >
+      System State: {systemState}
+    </div>
+  </div>
+</div>
 
-    header {
-        @apply mb-6 flex justify-between items-center;
-    }
+<style>
+  .kicked-rotor {
+    background: #1a1a2e;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  }
 
-    h2 {
-        @apply text-2xl font-bold text-white;
-        text-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
-    }
+  .phase-space {
+    background: #0f0f1a;
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
 
-    .system-state {
-        @apply text-sm font-medium;
-        color: #4a4a6a;
-    }
+  .grid-line {
+    stroke: #2a2a3a;
+    stroke-width: 0.5;
+    opacity: 0.3;
+  }
 
-    .state-indicator {
-        @apply px-3 py-1 rounded-full ml-2;
-    }
+  .axis {
+    stroke: #4a4a5a;
+    stroke-width: 2;
+  }
 
-    .state-indicator.regular {
-        @apply bg-green-500 bg-opacity-20 text-green-400;
-    }
+  .tick {
+    stroke: #4a4a5a;
+    stroke-width: 2;
+  }
 
-    .state-indicator.mixed {
-        @apply bg-yellow-500 bg-opacity-20 text-yellow-400;
-    }
+  .axis-label,
+  .tick-label {
+    fill: #8a8a9a;
+    font-size: 14px;
+    text-anchor: middle;
+  }
 
-    .state-indicator.chaotic {
-        @apply bg-red-500 bg-opacity-20 text-red-400;
-    }
+  .trajectory circle {
+    fill: var(--trajectory-color);
+    opacity: 0.6;
+    filter: drop-shadow(0 0 2px var(--trajectory-color));
+  }
 
-    .visualization {
-        @apply mb-6;
-    }
+  .click-trajectory circle {
+    fill: #00ff88;
+    filter: drop-shadow(0 0 4px #00ff88);
+    opacity: 0.8;
+  }
 
-    svg {
-        @apply rounded-lg cursor-crosshair;
-        background: #1a1a2e;
-    }
+  .controls {
+    margin-top: 1rem;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+  }
 
-    .grid-line {
-        @apply stroke-current;
-        stroke: rgba(74, 74, 106, 0.2);
-        stroke-width: 1;
-    }
+  .parameter-control {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: #8a8a9a;
+  }
 
-    .axis {
-        @apply stroke-current;
-        stroke: #4a4a6a;
-        stroke-width: 2;
-    }
+  input[type="range"] {
+    width: 200px;
+    accent-color: #00ff88;
+  }
 
-    .axis-label {
-        @apply fill-current text-sm;
-        fill: #4a4a6a;
-        font-family: 'Monaco', monospace;
-    }
+  .system-state {
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    font-weight: bold;
+    transition: all 0.3s;
+  }
 
-    .point {
-        transition: all 0.2s ease;
-    }
+  .regular {
+    background: #00448833;
+    color: #00ff88;
+  }
 
-    .initial-point {
-        filter: drop-shadow(0 0 4px rgba(255, 0, 85, 0.5));
-    }
+  .mixed {
+    background: #884400aa;
+    color: #ffaa00;
+  }
 
-    .controls {
-        @apply mt-6 flex flex-col gap-4;
-    }
+  .chaotic {
+    background: #880000aa;
+    color: #ff4444;
+  }
 
-    .button-group {
-        @apply flex gap-4 flex-wrap;
-    }
-
-    .control-button {
-        @apply px-6 py-3 rounded-lg text-white font-medium transition-all duration-200;
-        background: linear-gradient(135deg, #00ff9d 0%, #00cc7e 100%);
-    }
-
-    .control-button:hover {
-        @apply transform scale-105;
-        box-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
-    }
-
-    .control-button.active {
-        background: linear-gradient(135deg, #ff0055 0%, #cc0044 100%);
-    }
-
-    .control-button.clear {
-        background: linear-gradient(135deg, #666 0%, #444 100%);
-    }
-
-    .parameter-control {
-        @apply flex flex-col gap-2;
-    }
-
-    .parameter-control label {
-        @apply text-sm font-medium text-gray-400;
-    }
-
-    input[type="range"] {
-        @apply w-full;
-        -webkit-appearance: none;
-        height: 4px;
-        background: #4a4a6a;
-        border-radius: 2px;
-    }
-
-    input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 16px;
-        height: 16px;
-        background: #00ff9d;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    input[type="range"]::-webkit-slider-thumb:hover {
-        transform: scale(1.2);
-        box-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
-    }
-
-    .parameter-value {
-        @apply text-sm font-mono text-gray-400;
-    }
-
-    .instructions {
-        @apply mt-4 text-sm text-gray-400 text-center;
-    }
+  :global(body) {
+    background: #0f0f1a;
+    color: #fff;
+  }
 </style>
