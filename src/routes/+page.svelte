@@ -101,6 +101,24 @@
     }, 20); // Adjust this value to control animation speed (20ms = 50fps)
   }
 
+  function debounce<T extends (...args: any[]) => void>(
+    func: T,
+    delay: number = 300
+  ): (...args: Parameters<T>) => void {
+      let timeoutId: ReturnType<typeof setTimeout>;
+      return (...args: Parameters<T>) => {
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+              func(...args);
+          }, delay);
+      };
+  }
+
+  // Debounced update function for k
+  const updateK = debounce((value: number) => {
+    k = value;
+  }, 300);
+
   function handleCanvasClick(event: MouseEvent | KeyboardEvent) {
     if (event instanceof MouseEvent) {
       const svg = document.querySelector('.phase-space') as SVGGraphicsElement;
@@ -294,7 +312,11 @@
         min="0"
         max="5"
         step="0.1"
-        bind:value={k}
+        oninput={(e) => {
+          if (e.target) {
+            updateK(parseFloat((e.target as HTMLInputElement).value));
+          }
+        }}
       />
     </div>
   </div>
