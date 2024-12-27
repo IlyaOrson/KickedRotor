@@ -17,7 +17,7 @@
   const TWO_PI = 2 * PI;
 
   // State
-  let k = $state(0.7);
+  let k = $state(0.971635);
   let trajectories = $state<Trajectory[]>([]);
   let clickTrajectory = $state<Trajectory | null>(null);
   let animationPoints = $state(0);
@@ -139,8 +139,7 @@
         startTrajectoryAnimation(generateTrajectory(theta, p, 10 * POINTS_PER_TRAJECTORY));
       }
     } else if (event instanceof KeyboardEvent) {
-      // Handle keyboard event
-      // You can add specific logic for keyboard events if needed
+      // Handle keyboard events
     }
   }
 
@@ -312,6 +311,7 @@
         min="0"
         max="5"
         step="0.1"
+        value={k}
         oninput={(e) => {
           if (e.target) {
             updateK(parseFloat((e.target as HTMLInputElement).value));
@@ -327,19 +327,20 @@
   @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
 
   .kicked-rotor {
-    background: #0f0f1a;
     padding: 1rem;
-    border-radius: 1rem;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 95vw;
     max-height: 95vh;
     margin: auto;
-    box-sizing: border-box;
+    box-sizing: content-box;
     position: relative;
     gap: 0.5rem;
+  }
+
+  .phase-space {
+    cursor: crosshair;
   }
 
   .title {
