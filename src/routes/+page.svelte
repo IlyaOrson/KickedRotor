@@ -1,4 +1,13 @@
+<!-- Hack to render equations from the markdown file
+https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
+
+<svelte:head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+</svelte:head>
+
 <script lang="ts">
+
+  import README from '../../README.md';
 
   // Cleanup on unmount or k changes
   import { onDestroy } from 'svelte';
@@ -167,133 +176,143 @@
       clearInterval(animationInterval);
     }
   });
+
+  // State for README widget
+  let isReadmeExpanded = $state(false);
+
+  function toggleReadme() {
+    isReadmeExpanded = !isReadmeExpanded;
+  }
 </script>
 
 <div class="kicked-rotor">
+  <!-- <h1 class="title">The Kicked Rotor</h1> -->
+  {#if !isReadmeExpanded}
   <h1 class="title">The Kicked Rotor</h1>
-  <div
-    class="svg-container"
-    onclick={handleCanvasClick}
-    onkeydown={handleCanvasKeydown}
-    onkeypress={handleCanvasKeypress}
-    role="button"
-    tabindex="0"
-  >
-    <svg
-      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-      preserveAspectRatio="xMidYMid meet"
-      role="img"
-      aria-label="Phase space visualization"
-      class="phase-space"
+  <h2 class="subtitle">(Click on the map!)</h2>
+    <div
+      class="svg-container"
+      onclick={handleCanvasClick}
+      onkeydown={handleCanvasKeydown}
+      onkeypress={handleCanvasKeypress}
+      role="button"
+      tabindex="0"
     >
-    <!-- Grid -->
-    {#each Array(10) as _, i}
+      <svg
+        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+        preserveAspectRatio="xMidYMid meet"
+        role="img"
+        aria-label="Phase space visualization"
+        class="phase-space"
+      >
+      <!-- Grid -->
+      {#each Array(10) as _, i}
+        <line
+          x1={MARGIN}
+          y1={MARGIN + (i * (HEIGHT - 2 * MARGIN)) / 9}
+          x2={WIDTH - MARGIN}
+          y2={MARGIN + (i * (HEIGHT - 2 * MARGIN)) / 9}
+          class="grid-line"
+        />
+        <line
+          x1={MARGIN + (i * (WIDTH - 2 * MARGIN)) / 9}
+          y1={MARGIN}
+          x2={MARGIN + (i * (WIDTH - 2 * MARGIN)) / 9}
+          y2={HEIGHT - MARGIN}
+          class="grid-line"
+        />
+      {/each}
+
+      <!-- Axes -->
       <line
         x1={MARGIN}
-        y1={MARGIN + (i * (HEIGHT - 2 * MARGIN)) / 9}
-        x2={WIDTH - MARGIN}
-        y2={MARGIN + (i * (HEIGHT - 2 * MARGIN)) / 9}
-        class="grid-line"
-      />
-      <line
-        x1={MARGIN + (i * (WIDTH - 2 * MARGIN)) / 9}
-        y1={MARGIN}
-        x2={MARGIN + (i * (WIDTH - 2 * MARGIN)) / 9}
-        y2={HEIGHT - MARGIN}
-        class="grid-line"
-      />
-    {/each}
-
-    <!-- Axes -->
-    <line
-      x1={MARGIN}
-      y1={HEIGHT - MARGIN}
-      x2={WIDTH - MARGIN}
-      y2={HEIGHT - MARGIN}
-      class="axis"
-    />
-    <line
-      x1={MARGIN}
-      y1={MARGIN}
-      x2={MARGIN}
-      y2={HEIGHT - MARGIN}
-      class="axis"
-    />
-
-    <!-- Axis Labels and Ticks -->
-    <text x={WIDTH / 2} y={HEIGHT - 10} class="axis-label">θ</text>
-    <text
-      x={10}
-      y={HEIGHT / 2}
-      class="axis-label">p</text
-    >
-
-    <!-- p-axis ticks -->
-    {#each [-PI, -PI / 2, 0, PI / 2, PI] as p, i}
-      {@const [_, y] = toSVGCoords(0, p)}
-      <line x1={MARGIN - 5} y1={y} x2={MARGIN} y2={y} class="tick" />
-      <text
-        x={MARGIN - 10}
-        {y}
-        class="tick-label y-axis-label"
-        text-anchor="end"
-        dominant-baseline="middle"
-      >
-        {p === 0
-          ? "0"
-          : `${p < 0 ? "-" : ""}π${Math.abs(p) !== PI ? "/2" : ""}`}
-      </text>
-    {/each}
-
-    <!-- θ-axis ticks -->
-    {#each [0, PI / 2, PI, (3 * PI) / 2, TWO_PI] as theta, i}
-      {@const [x, _] = toSVGCoords(theta, 0)}
-      <line
-        x1={x}
         y1={HEIGHT - MARGIN}
-        x2={x}
-        y2={HEIGHT - MARGIN + 5}
-        class="tick"
+        x2={WIDTH - MARGIN}
+        y2={HEIGHT - MARGIN}
+        class="axis"
       />
+      <line
+        x1={MARGIN}
+        y1={MARGIN}
+        x2={MARGIN}
+        y2={HEIGHT - MARGIN}
+        class="axis"
+      />
+
+      <!-- Axis Labels and Ticks -->
+      <text x={WIDTH / 2} y={HEIGHT - 10} class="axis-label">θ</text>
       <text
-        {x}
-        y={HEIGHT - MARGIN + 20}
-        class="tick-label x-axis-label"
-        text-anchor="middle"
+        x={10}
+        y={HEIGHT / 2}
+        class="axis-label">p</text
       >
-        {theta === 0
-          ? "0"
-          : `${theta === TWO_PI ? "2" : ""}π${theta !== PI && theta !== TWO_PI ? "/2" : ""}`}
-      </text>
-    {/each}
 
-    <!-- Trajectories -->
-    {#each trajectories as trajectory, i}
-      <g class="trajectory" style="--trajectory-color: {colors[i]}">
-        {#each trajectory as [theta, p]}
-          {@const [x, y] = toSVGCoords(theta, p)}
-          <circle cx={x} cy={y} r="1" />
-        {/each}
-      </g>
-    {/each}
+      <!-- p-axis ticks -->
+      {#each [-PI, -PI / 2, 0, PI / 2, PI] as p, i}
+        {@const [_, y] = toSVGCoords(0, p)}
+        <line x1={MARGIN - 5} y1={y} x2={MARGIN} y2={y} class="tick" />
+        <text
+          x={MARGIN - 10}
+          {y}
+          class="tick-label y-axis-label"
+          text-anchor="end"
+          dominant-baseline="middle"
+        >
+          {p === 0
+            ? "0"
+            : `${p < 0 ? "-" : ""}π${Math.abs(p) !== PI ? "/2" : ""}`}
+        </text>
+      {/each}
 
-    <!-- Click Trajectory -->
-    {#if clickTrajectory}
-      <g class="click-trajectory">
-        {#each clickTrajectory.slice(0, animationPoints + 1) as [theta, p], i}
-          {@const [x, y] = toSVGCoords(theta, p)}
-          <circle
-            cx={x}
-            cy={y}
-            r="1.5"
-            class="animated-point"
-            style="--point-index: {i}"
-          />
-        {/each}
-      </g>
-    {/if}
-  </svg>
-</div>
+      <!-- θ-axis ticks -->
+      {#each [0, PI / 2, PI, (3 * PI) / 2, TWO_PI] as theta, i}
+        {@const [x, _] = toSVGCoords(theta, 0)}
+        <line
+          x1={x}
+          y1={HEIGHT - MARGIN}
+          x2={x}
+          y2={HEIGHT - MARGIN + 5}
+          class="tick"
+        />
+        <text
+          {x}
+          y={HEIGHT - MARGIN + 20}
+          class="tick-label x-axis-label"
+          text-anchor="middle"
+        >
+          {theta === 0
+            ? "0"
+            : `${theta === TWO_PI ? "2" : ""}π${theta !== PI && theta !== TWO_PI ? "/2" : ""}`}
+        </text>
+      {/each}
+
+      <!-- Trajectories -->
+      {#each trajectories as trajectory, i}
+        <g class="trajectory" style="--trajectory-color: {colors[i]}">
+          {#each trajectory as [theta, p]}
+            {@const [x, y] = toSVGCoords(theta, p)}
+            <circle cx={x} cy={y} r="1" />
+          {/each}
+        </g>
+      {/each}
+
+      <!-- Click Trajectory -->
+      {#if clickTrajectory}
+        <g class="click-trajectory">
+          {#each clickTrajectory.slice(0, animationPoints + 1) as [theta, p], i}
+            {@const [x, y] = toSVGCoords(theta, p)}
+            <circle
+              cx={x}
+              cy={y}
+              r="1.5"
+              class="animated-point"
+              style="--point-index: {i}"
+            />
+          {/each}
+        </g>
+      {/if}
+    </svg>
+  </div>
   <div
     class="system-state"
     class:regular={systemState === "Regular"}
@@ -320,9 +339,21 @@
       />
     </div>
   </div>
+  {/if}
+  <div class="readme-widget">
+    <button class="toggle-button" onclick={toggleReadme}>
+      {isReadmeExpanded ? 'Hide README' : 'Show README'}
+    </button>
+    {#if isReadmeExpanded}
+      <div class="readme-content">
+        <README />
+      </div>
+    {/if}
+  </div>
 </div>
 
 <style>
+
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
   @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
 
@@ -347,12 +378,22 @@
     font-family: 'Press Start 2P', cursive;
     color: #00ff88;
     font-size: clamp(1rem, 4vw, 1.5rem);
+    margin: 0;
     min-height: var(--min-title-height);
     text-align: center;
     position: relative;
     z-index: 10;
-    padding: 0 1rem;
     text-shadow: 0 0 20px #00ff88, 0 0 30px #00ff88, 0 0 40px #00ff88;
+  }
+
+  .subtitle {
+    font-family: 'Roboto Mono', monospace;
+    color: #00ff88;
+    font-size: clamp(0.7rem, 2vw, 1rem);
+    margin: 0;
+    text-align: center;
+    position: relative;
+    z-index: 10;
   }
 
   .svg-container {
@@ -434,6 +475,7 @@
     gap: 1rem;
     align-items: center;
     width: 100%;
+    user-select: none;
   }
 
   .parameter-control {
@@ -459,7 +501,6 @@
 
   .system-state {
     font-size: clamp(0.7rem, 1.5vw, 1rem);
-    margin: 0.25rem 0;
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;
     font-weight: bold;
@@ -467,6 +508,7 @@
     text-align: center;
     vertical-align: baseline;
     font-family: 'Press Start 2P', cursive;
+    user-select: none;
   }
 
   .regular {
@@ -484,6 +526,38 @@
     color: #ff4444;
   }
 
+  .readme-widget {
+    width: 100%;
+    max-width: 800px;
+    text-align: center;
+  }
+
+  .toggle-button {
+    background: #00ff88;
+    color: #0f0f1a;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-family: 'Press Start 2P', cursive;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition: background 0.3s;
+  }
+
+  .toggle-button:hover {
+    background: #00cc70;
+  }
+
+  .readme-content {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    background: #1a1a2e;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    /* height: 70%; */
+    overflow-y: auto;
+  }
+
   @media (max-height: 600px) {
     .kicked-rotor {
       padding: 0.5rem;
@@ -491,7 +565,6 @@
     }
 
     .title {
-      margin: 0;
       padding: 0.25rem;
     }
 

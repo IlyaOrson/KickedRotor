@@ -1,58 +1,43 @@
-# create-svelte
+# The Kicked Rotor: Chaos on a Swing
 
-Everything you need to build a Svelte library, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
+Welcome to the fascinating world of the [kicked rotor](http://www.scholarpedia.org/article/Chirikov_standard_map), a fun model to play with chaos.
 
-Read more about creating a library [in the docs](https://svelte.dev/docs/kit/packaging).
+Imagine a simple pendulum that gets periodically kicked, like a child on a swing receiving random pushes. This seemingly simple system, first studied by Boris Chirikov in 1969, is governed by two elegant equations:
 
-## Creating a project
+$$
+p_{n+1} = p_n + K \sin(\theta_n) \mod 2\pi
+$$
 
-If you're seeing this, you've probably already done this step. Congrats!
+$$
+\theta_{n+1} = \theta_n + p_{n+1} \ \ \ \ \ \ \ \ \ \mod 2\pi
+$$
 
-```bash
-# create a new project in the current directory
-npx sv create
+Here, θ represents the angle, p the angular momentum, and K the kick strength - the chaos tuner!
+These memorable equations, known as the standard map, demonstrate how captivating complexity can emerge from simplicity, a theme that resonates throughout nature.
 
-# create a new project in my-app
-npx sv create my-app
-```
+## Physical connections 🪐
 
-## Developing
+- In our solar system, similar dynamics explain the mysterious Kirkwood gaps in the asteroid belt - regions where asteroids are conspicuously absent due to Jupiter's gravitational kicks (Meiss, 1992).
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+- Scientists at the NIST created a real quantum kicked rotor using cesium atoms in a pulsed optical lattice. They discovered that quantum mechanics can actually suppress chaos - a phenomenon called dynamical localization (Moore et al., Nature, 1995). This finding challenges our intuitions and has practical implications for quantum computing.
 
-```bash
-npm run dev
+- In fusion reactors, plasma (super-hot ionized gas) is confined in a donut-shaped magnetic field. The particles can receive kicks from magnetic field perturbations as they orbit, similar to our pendulum. These perturbations can lead to magnetic islands and chaos, affecting our ability to contain the plasma. The [Chirikov criterion](http://www.scholarpedia.org/article/Chirikov_criterion) helps predict when chaos will emerge.
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+## Interactive Exploration 🧑‍🔬
 
-Everything inside `src/lib` is part of your library, everything inside `src/routes` can be used as a showcase or preview app.
+Here's what you can do:
 
-## Building
+- Twist the K-dial: Start with K = 0.5 and watch ordered, predictable motion. Crank it up past K ≈ 0.971635... (the critical parameter!) and witness the onset of global chaos.
+- Click to Plot: Each click drops a "mathematical seed" that grows into a trajectory following the equations of motion. Watch the system's unexpected symmetries unfold!
+- Hunt for Islands: Even in the chaotic sea (high K), you can find stable islands. These "KAM tori" are the last survivors of order in a chaotic world. Can you find them?
 
-To build your library:
+## Final thoughts 💭
 
-```bash
-npm run package
-```
+Perhaps the most profound insight from the kicked rotor is this: chaos and order aren't opposites - they're dance partners in a cosmic swing. Playing with the interactive visualization we are exploring fundamental principles that relate seemingly unrelated physical phenomena, from atomic behavior to celestial mechanics.
 
-To create a production version of your showcase app:
+So go ahead, start clicking! Every trajectory you create tells a story about the balance between predictability and chaos in our universe.
 
-```bash
-npm run build
-```
 
-You can preview the production build with `npm run preview`.
+---
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
-
-## Publishing
-
-Go into the `package.json` and give your package the desired name through the `"name"` option. Also consider adding a `"license"` field and point it to a `LICENSE` file which you can create from a template (one popular option is the [MIT license](https://opensource.org/license/mit/)).
-
-To publish your library to [npm](https://www.npmjs.com):
-
-```bash
-npm publish
-```
+See *Chaos in Dynamical Systems* by Edward Ott for a nice book on the subject.
