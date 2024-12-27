@@ -240,11 +240,11 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
       />
 
       <!-- Axis Labels and Ticks -->
-      <text x={WIDTH / 2} y={HEIGHT - 10} class="axis-label">θ</text>
+      <text x={WIDTH / 2} y={HEIGHT - 10} class="axis-label">Angle (θ)</text>
       <text
         x={10}
         y={HEIGHT / 2}
-        class="axis-label">p</text
+        class="axis-label" transform="rotate(-90, 10, {HEIGHT / 2})">Momentum (p)</text
       >
 
       <!-- p-axis ticks -->
@@ -342,7 +342,7 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   {/if}
   <div class="readme-widget">
     <button class="toggle-button" onclick={toggleReadme}>
-      {isReadmeExpanded ? 'Hide README' : 'Show README'}
+      {isReadmeExpanded ? 'Playground' : 'README'}
     </button>
     {#if isReadmeExpanded}
       <div class="readme-content">
@@ -438,14 +438,14 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
     fill: var(--trajectory-color);
     opacity: 0.6;
     filter: drop-shadow(0 0 2px var(--trajectory-color));
-    r: clamp(0.5px, 0.2vw, 1px);
+    r: clamp(0.5px, 0.2vw, 1.5px);
   }
 
   .click-trajectory circle {
     fill: #00ff88;
     filter: drop-shadow(0 0 4px #00ff88);
     opacity: 0.8;
-    r: clamp(0.75px, 0.3vw, 1.5px);
+    r: clamp(0.75px, 0.3vw, 3px);
   }
 
   .animated-point {

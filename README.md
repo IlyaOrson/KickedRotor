@@ -28,7 +28,7 @@ These memorable equations, known as the standard map, demonstrate how captivatin
 Here's what you can do:
 
 - Twist the K-dial: Start with K = 0.5 and watch ordered, predictable motion. Crank it up past K ≈ 0.971635... (the critical parameter!) and witness the onset of global chaos.
-- Click to Plot: Each click drops a "mathematical seed" that grows into a trajectory following the equations of motion. Watch the system's unexpected symmetries unfold!
+- Click to Plot: Each click drops an initial system state that evolves into a trajectory following the equations of motion. Watch the system's unexpected symmetries unfold!
 - Hunt for Islands: Even in the chaotic sea (high K), you can find stable islands. These "KAM tori" are the last survivors of order in a chaotic world. Can you find them?
 
 ## Final thoughts 💭
