@@ -20,8 +20,8 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   const WIDTH = 800;
   const HEIGHT = 600;
   const MARGIN = 50;
-  const NUM_TRAJECTORIES = 30;
-  const POINTS_PER_TRAJECTORY = 100;
+  const NUM_TRAJECTORIES = 40;
+  const POINTS_PER_TRAJECTORY = 200;
   const PI = Math.PI;
   const TWO_PI = 2 * PI;
 
@@ -554,7 +554,6 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
     padding: 1rem;
     border-radius: 0.5rem;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    /* height: 70%; */
     overflow-y: auto;
   }
 
