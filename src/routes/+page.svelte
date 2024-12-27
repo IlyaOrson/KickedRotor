@@ -14,7 +14,7 @@
   const TWO_PI = 2 * PI;
 
   // State
-  let k = $state(0.5);
+  let k = $state(0.7);
   let trajectories = $state<Trajectory[]>([]);
   let clickTrajectory = $state<Trajectory | null>(null);
 
@@ -75,33 +75,39 @@
       });
   }
 
-  function handleCanvasClick(event: MouseEvent) {
-    const rect = (event.target as SVGElement).getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+  function handleCanvasClick(event: MouseEvent | KeyboardEvent) {
+    if (event instanceof MouseEvent) {
+      const svg = document.querySelector('.phase-space') as SVGGraphicsElement;
+      const pt = new DOMPoint();
+      const CTM = svg.getScreenCTM();
 
-    // Convert click coordinates to phase space
-    const theta = ((x - MARGIN) / (WIDTH - 2 * MARGIN)) * TWO_PI;
-    const p = -((y - MARGIN) / (HEIGHT - 2 * MARGIN)) * TWO_PI + PI;
+      if (CTM) {
+        pt.x = event.clientX;
+        pt.y = event.clientY;
 
-    clickTrajectory = generateTrajectory(theta, p);
+        // Transform the point from screen coordinates to SVG coordinates
+        const svgPoint = pt.matrixTransform(CTM.inverse());
+
+        // Convert SVG coordinates to phase space coordinates
+        const theta = ((svgPoint.x - MARGIN) / (WIDTH - 2 * MARGIN)) * TWO_PI;
+        const p = ((HEIGHT - svgPoint.y - MARGIN) / (HEIGHT - 2 * MARGIN)) * TWO_PI - PI;
+
+        clickTrajectory = generateTrajectory(theta, p);
+      }
+    } else if (event instanceof KeyboardEvent) {
+      // Handle keyboard event
+      // You can add specific logic for keyboard events if needed
+    }
   }
 
   function handleCanvasKeydown(event: KeyboardEvent) {
-    if (event.key === "Enter" || event.key === " ") {
-      const rect = (event.target as SVGElement).getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-      const mouseEvent = new MouseEvent("click", {
-        clientX: x,
-        clientY: y,
-      });
-      handleCanvasClick(mouseEvent);
+    if (event.key === 'Enter' || event.key === ' ') {
+      handleCanvasClick(event);
     }
   }
 
   function handleCanvasKeypress(event: KeyboardEvent) {
-    if (event.key === "Enter" || event.key === " ") {
+    if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
     }
   }
@@ -125,8 +131,8 @@
     tabindex="0"
   >
     <svg
-      width={WIDTH}
-      height={HEIGHT}
+      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+      preserveAspectRatio="xMidYMid meet"
       role="img"
       aria-label="Phase space visualization"
       class="phase-space"
@@ -233,11 +239,17 @@
     {/if}
   </svg>
 </div>
-
+  <div
+    class="system-state"
+    class:regular={systemState === "Regular"}
+    class:mixed={systemState === "Mixed"}
+    class:chaotic={systemState === "Chaotic"}
+  >
+    System State: {systemState}
+  </div>
   <div class="controls">
     <div class="parameter-control">
       <div class="k-value">K = {k.toFixed(2)}</div>
-      <!-- <label for="k-param">K = {k.toFixed(2)}</label> -->
       <input
         id="k-param"
         type="range"
@@ -247,15 +259,6 @@
         bind:value={k}
       />
     </div>
-
-    <div
-      class="system-state"
-      class:regular={systemState === "Regular"}
-      class:mixed={systemState === "Mixed"}
-      class:chaotic={systemState === "Chaotic"}
-    >
-      System State: {systemState}
-    </div>
   </div>
 </div>
 
@@ -264,38 +267,40 @@
   @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
 
   .kicked-rotor {
-    background: #1a1a2e;
-    padding: 2rem;
+    background: #0f0f1a;
+    padding: 1rem;
     border-radius: 1rem;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    max-width: 100%;
+    width: 95vw;
+    max-height: 95vh;
     margin: auto;
+    box-sizing: border-box;
+    position: relative;
+    gap: 0.5rem;
   }
 
   .title {
     font-family: 'Press Start 2P', cursive;
     color: #00ff88;
-    text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88, 0 0 30px #00ff88;
-    margin-bottom: 1rem;
+    font-size: clamp(1rem, 4vw, 1.5rem);
+    min-height: var(--min-title-height);
+    text-align: center;
+    position: relative;
+    z-index: 10;
+    padding: 0 1rem;
+    text-shadow: 0 0 20px #00ff88, 0 0 30px #00ff88, 0 0 40px #00ff88;
   }
 
   .svg-container {
     width: 100%;
-    max-width: 800px;
+    aspect-ratio: 8/6;
     display: flex;
     justify-content: center;
-  }
-
-  .phase-space {
-    background: #0f0f1a;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    width: 100%;
-    height: auto;
+    flex-shrink: 5;
+    min-height: 0;
   }
 
   .grid-line {
@@ -317,7 +322,7 @@
   .axis-label,
   .tick-label {
     fill: #8a8a9a;
-    font-size: 15px;
+    font-size: clamp(10px, 2vw, 15px);
     text-anchor: middle;
     font-family: 'Roboto Mono', monospace;
     user-select: none;
@@ -331,16 +336,18 @@
     fill: var(--trajectory-color);
     opacity: 0.6;
     filter: drop-shadow(0 0 2px var(--trajectory-color));
+    r: clamp(0.5px, 0.2vw, 1px);
   }
 
   .click-trajectory circle {
     fill: #00ff88;
     filter: drop-shadow(0 0 4px #00ff88);
     opacity: 0.8;
+    r: clamp(0.75px, 0.3vw, 1.5px);
   }
 
   .controls {
-    margin-top: 1rem;
+    margin: 0.5rem 0;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -358,8 +365,9 @@
 
   .k-value {
     font-family: 'Press Start 2P', cursive;
-    color: #00ff88;
-    margin-bottom: 0.5rem;
+    color: #a200ff;
+    font-size: clamp(0.7rem, 1.5vw, 1rem);
+    margin-top: 1rem;
   }
 
   input[type="range"] {
@@ -369,11 +377,14 @@
   }
 
   .system-state {
+    font-size: clamp(0.7rem, 1.5vw, 1rem);
+    margin: 0.25rem 0;
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;
     font-weight: bold;
     transition: all 0.3s;
     text-align: center;
+    vertical-align: baseline;
     font-family: 'Press Start 2P', cursive;
   }
 
@@ -390,6 +401,35 @@
   .chaotic {
     background: #880000aa;
     color: #ff4444;
+  }
+
+  @media (max-height: 600px) {
+    .kicked-rotor {
+      padding: 0.5rem;
+      gap: 0.25rem;
+    }
+
+    .title {
+      margin: 0;
+      padding: 0.25rem;
+    }
+
+    .controls {
+      margin: 0.25rem 0;
+      gap: 0.5rem;
+    }
+
+    .parameter-control {
+      gap: 0.5rem;
+    }
+
+    .system-state {
+      padding: 0.25rem 0.5rem;
+    }
+
+    input[type="range"] {
+      transform: scale(0.9);
+    }
   }
 
   :global(body) {
