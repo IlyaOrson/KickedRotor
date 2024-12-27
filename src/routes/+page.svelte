@@ -1,5 +1,8 @@
 <script lang="ts">
 
+  // Cleanup on unmount or k changes
+  import { onDestroy } from 'svelte';
+
   // Types
   type Point = [number, number]; // [theta, p]
   type Trajectory = Point[];
@@ -17,6 +20,8 @@
   let k = $state(0.7);
   let trajectories = $state<Trajectory[]>([]);
   let clickTrajectory = $state<Trajectory | null>(null);
+  let animationPoints = $state(0);
+  let animationInterval: number | null = null;
 
   // Colors for trajectories
   const colors = Array(NUM_TRAJECTORIES)
@@ -52,12 +57,13 @@
 
   function generateTrajectory(
     initialTheta: number,
-    initialP: number
+    initialP: number,
+    points = POINTS_PER_TRAJECTORY,
   ): Trajectory {
     const trajectory: Trajectory = [];
     let [theta, p] = [initialTheta, initialP];
 
-    for (let i = 0; i < POINTS_PER_TRAJECTORY; i++) {
+    for (let i = 0; i < points; i++) {
       trajectory.push([theta, p]);
       [theta, p] = nextState(theta, p);
     }
@@ -73,6 +79,26 @@
         const initialP = Math.random() * TWO_PI - PI; // Range [-π, π]
         return generateTrajectory(initialTheta, initialP);
       });
+  }
+
+  function startTrajectoryAnimation(trajectory: Trajectory) {
+    // Clear any existing animation
+    if (animationInterval) {
+      clearInterval(animationInterval);
+    }
+
+    // Reset animation state
+    animationPoints = 0;
+    clickTrajectory = trajectory;
+
+    // Start animation
+    animationInterval = setInterval(() => {
+      if (animationPoints >= trajectory.length - 1) {
+        clearInterval(animationInterval!);
+      } else {
+        animationPoints++;
+      }
+    }, 20); // Adjust this value to control animation speed (20ms = 50fps)
   }
 
   function handleCanvasClick(event: MouseEvent | KeyboardEvent) {
@@ -92,7 +118,7 @@
         const theta = ((svgPoint.x - MARGIN) / (WIDTH - 2 * MARGIN)) * TWO_PI;
         const p = ((HEIGHT - svgPoint.y - MARGIN) / (HEIGHT - 2 * MARGIN)) * TWO_PI - PI;
 
-        clickTrajectory = generateTrajectory(theta, p);
+        startTrajectoryAnimation(generateTrajectory(theta, p, 10 * POINTS_PER_TRAJECTORY));
       }
     } else if (event instanceof KeyboardEvent) {
       // Handle keyboard event
@@ -117,6 +143,12 @@
     initializePhaseSpace();
     // Clear click trajectory when k changes
     clickTrajectory = null;
+  });
+
+  onDestroy(() => {
+    if (animationInterval) {
+      clearInterval(animationInterval);
+    }
   });
 </script>
 
@@ -231,9 +263,15 @@
     <!-- Click Trajectory -->
     {#if clickTrajectory}
       <g class="click-trajectory">
-        {#each clickTrajectory as [theta, p]}
+        {#each clickTrajectory.slice(0, animationPoints + 1) as [theta, p], i}
           {@const [x, y] = toSVGCoords(theta, p)}
-          <circle cx={x} cy={y} r="1.5" />
+          <circle
+            cx={x}
+            cy={y}
+            r="1.5"
+            class="animated-point"
+            style="--point-index: {i}"
+          />
         {/each}
       </g>
     {/if}
@@ -344,6 +382,26 @@
     filter: drop-shadow(0 0 4px #00ff88);
     opacity: 0.8;
     r: clamp(0.75px, 0.3vw, 1.5px);
+  }
+
+  .animated-point {
+    animation: pointAppear 0.3s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes pointAppear {
+    from {
+      opacity: 0;
+      r: 0.5;
+    }
+    50% {
+      opacity: 1;
+      r: 2.5;
+    }
+    to {
+      opacity: 0.8;
+      r: 1.5;
+    }
   }
 
   .controls {
