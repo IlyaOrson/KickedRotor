@@ -1,4 +1,4 @@
-<!-- Hack to render equations from the markdown file
+<!-- Workaround to render equations from a markdown file
 https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
 
 <svelte:head>
@@ -9,22 +9,15 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
 
   import README from '../../README.md';
 
-  // Cleanup on unmount or k changes
-  import { onDestroy } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
 
   // Types
   type Point = [number, number]; // [theta, p]
   type Trajectory = Point[];
 
   // Constants
-  let WIDTH = $state(900);
-  let HEIGHT = $state(600);
-
-  if (typeof window !== 'undefined') {
-    WIDTH = Math.min(window.innerWidth, 900);
-    HEIGHT = Math.min(window.innerHeight, 600);
-  }
-
+  const ASPECT_RATIO = 2/3; // height = width * 2/3
+  const MAX_WIDTH = 900;
   const MARGIN = 50;
   const NUM_TRAJECTORIES = 40;
   const POINTS_PER_TRAJECTORY = 200;
@@ -32,11 +25,27 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   const TWO_PI = 2 * PI;
 
   // State
+
   let k = $state(0.971635);
   let trajectories = $state<Trajectory[]>([]);
   let clickTrajectory = $state<Trajectory | null>(null);
   let animationPoints = $state(0);
   let animationInterval: number | null = null;
+
+  let WIDTH = $state(MAX_WIDTH);
+  let HEIGHT = $derived(WIDTH * ASPECT_RATIO);
+  onMount(() => {
+    const updateDimensions = () => {
+      WIDTH = Math.min(window.innerWidth, MAX_WIDTH);
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+    };
+  });
 
   // Colors for trajectories
   const colors = Array(NUM_TRAJECTORIES)
@@ -397,7 +406,7 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   .subtitle {
     font-family: 'Roboto Mono', monospace;
     color: #00ff88;
-    font-size: clamp(0.7rem, 2vw, 1rem);
+    font-size: clamp(0.7rem, 1.5vw, 1rem);
     margin: 0;
     text-align: center;
     position: relative;
@@ -477,7 +486,6 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   }
 
   .controls {
-    margin: 0.5rem 0;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -497,7 +505,7 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   .k-value {
     font-family: 'Press Start 2P', cursive;
     color: #a200ff;
-    font-size: clamp(0.7rem, 1.5vw, 1rem);
+    font-size: clamp(0.7rem, 1.2vw, 1rem);
     margin-top: 1rem;
   }
 
@@ -508,7 +516,7 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   }
 
   .system-state {
-    font-size: clamp(0.7rem, 1.5vw, 1rem);
+    font-size: clamp(0.7rem, 1.2vw, 1rem);
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;
     font-weight: bold;
@@ -551,10 +559,6 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
     transition: background 0.3s;
   }
 
-  .toggle-button:hover {
-    background: #00cc70;
-  }
-
   .readme-content {
     margin-top: 1rem;
     margin-bottom: 1rem;
@@ -563,34 +567,6 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
     border-radius: 0.5rem;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     overflow-y: auto;
-  }
-
-  @media (max-height: 600px) {
-    .kicked-rotor {
-      padding: 0.5rem;
-      gap: 0.25rem;
-    }
-
-    .title {
-      padding: 0.25rem;
-    }
-
-    .controls {
-      margin: 0.25rem 0;
-      gap: 0.5rem;
-    }
-
-    .parameter-control {
-      gap: 0.5rem;
-    }
-
-    .system-state {
-      padding: 0.25rem 0.5rem;
-    }
-
-    input[type="range"] {
-      transform: scale(0.9);
-    }
   }
 
   :global(body) {
