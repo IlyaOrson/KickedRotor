@@ -17,8 +17,14 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   type Trajectory = Point[];
 
   // Constants
-  const WIDTH = 800;
-  const HEIGHT = 600;
+  let WIDTH = $state(900);
+  let HEIGHT = $state(600);
+
+  if (typeof window !== 'undefined') {
+    WIDTH = Math.min(window.innerWidth, 900);
+    HEIGHT = Math.min(window.innerHeight, 600);
+  }
+
   const MARGIN = 50;
   const NUM_TRAJECTORIES = 40;
   const POINTS_PER_TRAJECTORY = 200;
@@ -128,33 +134,31 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
     k = value;
   }, 300);
 
-  function handleCanvasClick(event: MouseEvent | KeyboardEvent) {
-    if (event instanceof MouseEvent) {
-      const svg = document.querySelector('.phase-space') as SVGGraphicsElement;
-      const pt = new DOMPoint();
-      const CTM = svg.getScreenCTM();
+  function handleCanvasClick(event: MouseEvent) {
 
-      if (CTM) {
-        pt.x = event.clientX;
-        pt.y = event.clientY;
-
-        // Transform the point from screen coordinates to SVG coordinates
-        const svgPoint = pt.matrixTransform(CTM.inverse());
-
-        // Convert SVG coordinates to phase space coordinates
-        const theta = ((svgPoint.x - MARGIN) / (WIDTH - 2 * MARGIN)) * TWO_PI;
-        const p = ((HEIGHT - svgPoint.y - MARGIN) / (HEIGHT - 2 * MARGIN)) * TWO_PI - PI;
-
-        startTrajectoryAnimation(generateTrajectory(theta, p, 10 * POINTS_PER_TRAJECTORY));
-      }
-    } else if (event instanceof KeyboardEvent) {
-      // Handle keyboard events
+    const svg = document.querySelector('.phase-space') as SVGSVGElement;
+    const pt = svg.createSVGPoint();
+    const CTM = svg.getScreenCTM();
+    if (!CTM) {
+      throw new Error('Could not get SVG coordinate transformation matrix');
     }
+
+    pt.x = event.clientX;
+    pt.y = event.clientY;
+
+    // Transform the point from screen coordinates to SVG coordinates
+    const svgPoint = pt.matrixTransform(CTM.inverse());
+
+    // Convert SVG coordinates to phase space coordinates
+    const theta = ((svgPoint.x - MARGIN) / (WIDTH - 2 * MARGIN)) * TWO_PI;
+    const p = ((HEIGHT - svgPoint.y - MARGIN) / (HEIGHT - 2 * MARGIN)) * TWO_PI - PI;
+
+    startTrajectoryAnimation(generateTrajectory(theta, p, 5 * POINTS_PER_TRAJECTORY));
   }
 
   function handleCanvasKeydown(event: KeyboardEvent) {
     if (event.key === 'Enter' || event.key === ' ') {
-      handleCanvasClick(event);
+      event.preventDefault();
     }
   }
 
@@ -199,6 +203,8 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
       tabindex="0"
     >
       <svg
+        width={WIDTH}
+        height={HEIGHT}
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         preserveAspectRatio="xMidYMid meet"
         role="img"
@@ -372,6 +378,8 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
 
   .phase-space {
     cursor: crosshair;
+    width: 100%;
+    height: auto;
   }
 
   .title {
