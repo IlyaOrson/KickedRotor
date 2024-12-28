@@ -392,7 +392,7 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   }
 
   .title {
-    font-family: 'Press Start 2P', cursive;
+    font-family: 'Press Start 2P', monospace;
     color: #00ff88;
     font-size: clamp(1rem, 4vw, 1.5rem);
     margin: 0;
@@ -503,7 +503,7 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   }
 
   .k-value {
-    font-family: 'Press Start 2P', cursive;
+    font-family: 'Press Start 2P', monospace;
     color: #a200ff;
     font-size: clamp(0.7rem, 1.2vw, 1rem);
     margin-top: 1rem;
@@ -523,7 +523,7 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
     transition: all 0.3s;
     text-align: center;
     vertical-align: baseline;
-    font-family: 'Press Start 2P', cursive;
+    font-family: 'Press Start 2P', monospace;
     user-select: none;
   }
 
@@ -553,7 +553,7 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
     color: #0f0f1a;
     border: none;
     padding: 0.5rem 1rem;
-    font-family: 'Press Start 2P', cursive;
+    font-family: 'Press Start 2P', monospace;
     cursor: pointer;
     border-radius: 0.25rem;
     transition: background 0.3s;
@@ -568,6 +568,7 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     overflow-y: auto;
   }
+
 
   :global(body) {
     background: #0f0f1a;
