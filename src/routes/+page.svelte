@@ -19,7 +19,7 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   const ASPECT_RATIO = 2/3; // height = width * 2/3
   const MAX_WIDTH = 900;
   const MARGIN = 50;
-  const NUM_TRAJECTORIES = 40;
+  const NUM_TRAJECTORIES = 50;
   const POINTS_PER_TRAJECTORY = 200;
   const PI = Math.PI;
   const TWO_PI = 2 * PI;
@@ -202,7 +202,7 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   <!-- <h1 class="title">The Kicked Rotor</h1> -->
   {#if !isReadmeExpanded}
   <h1 class="title">The Kicked Rotor</h1>
-  <h2 class="subtitle">(Click on the map!)</h2>
+  <h2 class="subtitle">Click to explore chaos!</h2>
     <div
       class="svg-container"
       onclick={handleCanvasClick}
@@ -357,7 +357,7 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   {/if}
   <div class="readme-widget">
     <button class="toggle-button" onclick={toggleReadme}>
-      {isReadmeExpanded ? 'Playground' : 'README'}
+      {isReadmeExpanded ? 'Playground' : 'Explanation'}
     </button>
     {#if isReadmeExpanded}
       <div class="readme-content">
@@ -400,13 +400,13 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
     text-align: center;
     position: relative;
     z-index: 10;
-    text-shadow: 0 0 20px #00ff88, 0 0 30px #00ff88, 0 0 40px #00ff88;
+    text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88, 0 0 30px #00ff88;
   }
 
   .subtitle {
     font-family: 'Roboto Mono', monospace;
     color: #00ff88;
-    font-size: clamp(0.7rem, 1.5vw, 1rem);
+    font-size: clamp(0.6rem, 1vw, 1rem);
     margin: 0;
     text-align: center;
     position: relative;
