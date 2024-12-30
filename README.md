@@ -20,6 +20,12 @@ Each point on the interactive map represents a particular position and velocity 
 While the pendulum receives kicks at a constant rhythm, it's the strength of each kick what determines whether the next states of the pendulum will remain predictable or evolve chaotically.
 The kicked rotor demonstrates how captivating complexity can emerge from simplicity, a theme that resonates throughout nature.
 
+## Interactive exploration 🧑‍🔬
+
+- **Click new paths**: Each click sets a pendulum on a particular angle (θ) and velocity of rotation (p). Points of the same colour show where the pendulum ends up after each kick. This trajectory of points is calculated from the equations above and animated to be able to follow where the pendulum lands after many consistent kicks of the same strength. Watch closely how unexpected symmetries unfold!
+- **Play with K**: Start with K = 0.5 and watch ordered, predictable motion. Crank it up past K ≈ 0.971635... (the critical parameter) and witness the onset of global chaos.
+- **Hunt for islands**: Even in the chaotic sea (high K), you can find stable regions of tangible symmetry (called *islands* or *KAM tori*). These [KAM tori](http://www.scholarpedia.org/article/Kolmogorov-Arnold-Moser_theory) are the last survivors of order in a chaotic world. Can you find them?
+
 ## Physical connections 🪐
 
 - In our solar system, similar dynamics explain the mysterious [*Kirkwood gaps*](https://en.wikipedia.org/wiki/Kirkwood_gap) in the asteroid belt - regions where asteroids are conspicuously absent due to Jupiter's gravitational kicks ([Moons, 1996](https://doi.org/10.1007/BF00048446)).
@@ -27,12 +33,6 @@ The kicked rotor demonstrates how captivating complexity can emerge from simplic
 - Scientists at the NIST created a real quantum kicked rotor using cesium atoms in a pulsed optical lattice. They discovered that quantum mechanics can actually suppress chaos - a phenomenon called *dynamical localization* ([Moore et al., 1995](https://doi.org/10.1103/PhysRevLett.73.2974)). Turns out this counterintuitive phenomenon has practical implications for quantum computing ([Pizzamiglio et al., 2021](https://doi.org/10.3390/e23060654)).
 
 - In fusion reactors, plasma (super-hot ionized gas) is confined in a donut-shaped magnetic field. The plasma particles receive kicks from magnetic field perturbations as they orbit, just like our pendulum system, which lead to regions of stability known as *magnetic islands* and to chaos regions on their border ([Willensdorfer et al., 2024](https://doi.org/10.1038/s41567-024-02666-y)), affecting our ability to contain the plasma. Luckily the [Chirikov criterion](http://www.scholarpedia.org/article/Chirikov_criterion) helps to predict under which conditions will chaos emerge.
-
-## Interactive exploration 🧑‍🔬
-
-- **Click new paths**: Each click sets a pendulum on a particular angle (θ) and velocity of rotation (p). Points of the same color show where the pendulum ends up after each kick. This trajectory of points is calculated from the equations above and animated to be able to follow where the pendulum lands after many consistent kicks of the same strength. Watch closely how unexpected symmetries unfold!
-- **Play with K**: Start with K = 0.5 and watch ordered, predictable motion. Crank it up past K ≈ 0.971635... (the critical parameter) and witness the onset of global chaos.
-- **Hunt for islands**: Even in the chaotic sea (high K), you can find stable regions of tangible symmetry (called *islands* or *KAM tori*). These [KAM tori](http://www.scholarpedia.org/article/Kolmogorov-Arnold-Moser_theory) are the last survivors of order in a chaotic world. Can you find them?
 
 ## Final thoughts 💭
 
