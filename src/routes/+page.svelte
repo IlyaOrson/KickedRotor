@@ -1,10 +1,3 @@
-<!-- Workaround to render equations from a markdown file
-https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
-
-<svelte:head>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
-</svelte:head>
-
 <script lang="ts">
 
   import README from '../../README.md';
@@ -20,17 +13,19 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   const MAX_WIDTH = 900;
   const MARGIN = 50;
   const NUM_TRAJECTORIES = 50;
-  const POINTS_PER_TRAJECTORY = 200;
+  const POINTS_PER_TRAJECTORY = 150;
   const PI = Math.PI;
   const TWO_PI = 2 * PI;
 
   // State
 
-  let k = $state(0.971635);
+  // let k = $state(0.971635);
+  let k = $state(0.7);
   let trajectories = $state<Trajectory[]>([]);
   let clickTrajectory = $state<Trajectory | null>(null);
   let animationPoints = $state(0);
   let animationInterval: number | null = null;
+  let animationFrameId: number | null = null;
 
   let WIDTH = $state(MAX_WIDTH);
   let HEIGHT = $derived(WIDTH * ASPECT_RATIO);
@@ -106,9 +101,9 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   }
 
   function startTrajectoryAnimation(trajectory: Trajectory) {
-    // Clear any existing animation
-    if (animationInterval) {
-      clearInterval(animationInterval);
+    // Cancel any existing animation
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
     }
 
     // Reset animation state
@@ -116,13 +111,16 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
     clickTrajectory = trajectory;
 
     // Start animation
-    animationInterval = setInterval(() => {
+    const animate = () => {
       if (animationPoints >= trajectory.length - 1) {
-        clearInterval(animationInterval!);
+        cancelAnimationFrame(animationFrameId!);
       } else {
         animationPoints++;
+        animationFrameId = requestAnimationFrame(animate);
       }
-    }, 20); // Adjust this value to control animation speed (20ms = 50fps)
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
   }
 
   function debounce<T extends (...args: any[]) => void>(
@@ -141,7 +139,13 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   // Debounced update function for k
   const updateK = debounce((value: number) => {
     k = value;
-  }, 300);
+  }, 500);
+
+  function handleSliderInput(event: Event) {
+    const value = parseFloat((event.target as HTMLInputElement).value);
+    // k = value; // Immediate update
+    updateK(value); // Debounced update
+  }
 
   function handleCanvasClick(event: MouseEvent) {
 
@@ -185,8 +189,8 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   });
 
   onDestroy(() => {
-    if (animationInterval) {
-      clearInterval(animationInterval);
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
     }
   });
 
@@ -202,7 +206,7 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
   <!-- <h1 class="title">The Kicked Rotor</h1> -->
   {#if !isReadmeExpanded}
   <h1 class="title">The Kicked Rotor</h1>
-  <h2 class="subtitle">Click to explore chaos!</h2>
+  <h2 class="subtitle">Tap on the map to explore chaos!<br>Can you find stable regions?</h2>
     <div
       class="svg-container"
       onclick={handleCanvasClick}
@@ -346,11 +350,7 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
         max="5"
         step="0.1"
         value={k}
-        oninput={(e) => {
-          if (e.target) {
-            updateK(parseFloat((e.target as HTMLInputElement).value));
-          }
-        }}
+        oninput={handleSliderInput}
       />
     </div>
   </div>
@@ -368,6 +368,10 @@ https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000 -->
 </div>
 
 <style>
+
+  /* Workaround to render equations from a markdown file */
+  /* https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000  */
+  @import url("https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css");
 
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
   @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
