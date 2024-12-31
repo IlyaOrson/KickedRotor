@@ -6,7 +6,7 @@
   // Types
   type Point = [number, number]; // [theta, p]
   type Trajectory = Point[];
-  type InitialPoint = { theta: number; p: number }; // Add type for initial point
+  type InitialPoint = { theta: number; p: number };
 
   // Constants
   const ASPECT_RATIO = 2 / 3; // height = width * 2/3
@@ -23,18 +23,20 @@
 
   // let k = $state(0.971635);
   let k = $state(0.7);
+  let initialPoints = $state<InitialPoint[]>([]);
   let trajectories = $state<Trajectory[]>([]);
   let clickTrajectory = $state<Trajectory | null>(null);
   let animationPoints = $state(0);
   let animationInterval: number | null = null;
   let animationFrameId: number | null = null;
-  let initialPoints = $state<InitialPoint[]>([]); // Add state for initial points
+  let debounceDelay = $state(300); // Default debounce delay
 
   let WIDTH = $state(MAX_WIDTH);
   let HEIGHT = $derived(WIDTH * ASPECT_RATIO);
   let pointsPerTrajectory = $derived(
     Math.floor(MIN_POINTS + (WIDTH / MAX_WIDTH) * (MAX_POINTS - MIN_POINTS))
   );
+
   onMount(() => {
     const updateDimensions = () => {
       WIDTH = Math.min(window.innerWidth, MAX_WIDTH);
@@ -44,7 +46,11 @@
     window.addEventListener("resize", updateDimensions);
 
     // Sample initial points once
+    const start = performance.now();
     sampleInitialPoints();
+    initializePhaseSpace();
+    const end = performance.now();
+    debounceDelay = end - start;
 
     return () => {
       window.removeEventListener("resize", updateDimensions);
@@ -78,7 +84,6 @@
 
   function toSVGCoords(theta: number, p: number): Point {
     const x = MARGIN + (theta / TWO_PI) * (WIDTH - 2 * MARGIN);
-    // Add small top margin
     const y = TOP_MARGIN + ((p + PI) / TWO_PI) * (HEIGHT - MARGIN - TOP_MARGIN);
     return [x, y];
   }
@@ -162,7 +167,7 @@
   // Debounced update function for k
   const updateK = debounce((value: number) => {
     k = value;
-  }, 200);
+  }, () => debounceDelay);
 
   function handleSliderInput(event: Event) {
     const value = parseFloat((event.target as HTMLInputElement).value);
