@@ -27,7 +27,6 @@
   let trajectories = $state<Trajectory[]>([]);
   let clickTrajectory = $state<Trajectory | null>(null);
   let animationPoints = $state(0);
-  let animationInterval: number | null = null;
   let animationFrameId: number | null = null;
   let debounceDelay = $state(300); // Default debounce delay
 
@@ -61,15 +60,6 @@
   const colors = Array(NUM_TRAJECTORIES)
     .fill(0)
     .map((_, i) => `hsl(${(i * 360) / NUM_TRAJECTORIES}, 80%, 60%)`);
-
-  // State classification
-  let systemState = $derived(getSystemState(k));
-
-  function getSystemState(k: number): string {
-    if (k < 0.5) return "Regular";
-    if (k < 2.0) return "Mixed";
-    return "Chaotic";
-  }
 
   // Helper functions
   function mod(n: number, m: number): number {
@@ -377,17 +367,9 @@
         {/if}
       </svg>
     </div>
-    <div
-      class="system-state"
-      class:regular={systemState === "Regular"}
-      class:mixed={systemState === "Mixed"}
-      class:chaotic={systemState === "Chaotic"}
-    >
-      System State: {systemState}
-    </div>
     <div class="controls">
       <div class="parameter-control">
-        <div class="k-value">K = {k.toFixed(2)}</div>
+        <div class="k-value">Kick Strength = {k.toFixed(2)}</div>
         <input
           id="k-param"
           type="range"
@@ -496,6 +478,7 @@
     font-size: clamp(10px, 2vw, 15px);
     text-anchor: middle;
     font-family: "Roboto Mono", monospace;
+    user-select: none;
   }
 
   .y-axis-label {
@@ -564,32 +547,6 @@
     max-width: 200px;
     accent-color: #00ff88;
     margin-bottom: 1rem;
-  }
-
-  .system-state {
-    font-size: clamp(0.7rem, 2vw, 1.5rem);
-    padding: 0.6rem;
-    border-radius: 0.25rem;
-    font-weight: bold;
-    transition: all 0.3s;
-    text-align: center;
-    vertical-align: baseline;
-    font-family: "Press Start 2P", monospace;
-  }
-
-  .regular {
-    background: #00448833;
-    color: #00ff88;
-  }
-
-  .mixed {
-    background: #884400aa;
-    color: #ffaa00;
-  }
-
-  .chaotic {
-    background: #880000aa;
-    color: #ff4444;
   }
 
   .readme-widget {
