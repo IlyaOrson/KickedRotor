@@ -28,10 +28,11 @@
   let clickTrajectory = $state<Trajectory | null>(null);
   let animationPoints = $state(0);
   let animationFrameId: number | null = null;
-  let debounceDelay = $state(300); // Default debounce delay
+  let debounceDelay = $state(300);
 
   let WIDTH = $state(MAX_WIDTH);
   let HEIGHT = $derived(WIDTH * ASPECT_RATIO);
+
   let pointsPerTrajectory = $derived(
     Math.floor(MIN_POINTS + (WIDTH / MAX_WIDTH) * (MAX_POINTS - MIN_POINTS))
   );
@@ -155,9 +156,12 @@
   }
 
   // Debounced update function for k
-  const updateK = debounce((value: number) => {
-    k = value;
-  }, () => debounceDelay);
+  const updateK = debounce(
+    (value: number) => {
+      k = value;
+    },
+    () => debounceDelay
+  );
 
   function handleSliderInput(event: Event) {
     const value = parseFloat((event.target as HTMLInputElement).value);
@@ -367,6 +371,7 @@
         {/if}
       </svg>
     </div>
+
     <div class="controls">
       <div class="parameter-control">
         <div class="k-value">Kick Strength = {k.toFixed(2)}</div>
@@ -537,7 +542,7 @@
 
   .k-value {
     font-family: "Press Start 2P", monospace;
-    color: #a200ff;
+    color: #ca47eb;
     font-size: clamp(0.7rem, 1.2vw, 1rem);
     margin-top: 1rem;
   }
@@ -556,7 +561,7 @@
   }
 
   .toggle-button {
-    background: #9900ff;
+    background: #6847eb;
     color: #e4e4ff;
     border: none;
     padding: 0.5rem 1rem;
