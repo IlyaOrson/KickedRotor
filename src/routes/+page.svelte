@@ -1,6 +1,6 @@
 <script lang="ts">
   import README from "../../README.md";
-
+  import Rotor from "$lib/components/Rotor.svelte";
   import { onMount, onDestroy } from "svelte";
 
   // Types
@@ -36,6 +36,10 @@
   let pointsPerTrajectory = $derived(
     Math.floor(MIN_POINTS + (WIDTH / MAX_WIDTH) * (MAX_POINTS - MIN_POINTS))
   );
+
+  let isRotorMode = $state(false);  // TODO
+  let selectedTheta = $state(0);
+  let selectedP = $state(0);
 
   onMount(() => {
     const updateDimensions = () => {
@@ -393,6 +397,29 @@
       {isReadmeExpanded ? "Playground" : "What is this?"}
     </button>
     {#if isReadmeExpanded}
+      <div class="parameter-control">
+        <div>θ (theta) = {selectedTheta.toFixed(2)}</div>
+        <input
+          type="range"
+          min="0"
+          max={TWO_PI}
+          step="0.01"
+          bind:value={selectedTheta}
+          aria-label="Theta parameter"
+        />
+        <div>p (momentum) = {selectedP.toFixed(2)}</div>
+        <input
+          type="range"
+          min={-PI}
+          max={PI}
+          step="0.01"
+          bind:value={selectedP}
+          aria-label="P parameter"
+        />
+      </div>
+      <div class="rotor-explorer">
+        <Rotor theta={selectedTheta} p={selectedP} size={WIDTH} />
+      </div>
       <div class="readme-content">
         <README />
       </div>
