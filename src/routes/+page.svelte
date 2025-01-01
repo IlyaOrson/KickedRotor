@@ -13,7 +13,7 @@
   const ASPECT_RATIO = 2 / 3; // height = width * 2/3
   const MAX_WIDTH = 600;
   const MARGIN = 50;
-  const TOP_MARGIN = 5;
+  const TOP_MARGIN = 8;
   const NUM_TRAJECTORIES = 10;
   const MIN_POINTS = 10; // small screens
   const MAX_POINTS = 150; // large screens
@@ -231,7 +231,7 @@
   $effect(() => {
     initializePhaseSpace();
     // Clear click trajectory when k changes
-    clickTrajectory = null;
+    // clickTrajectory = null;
   });
 
   onDestroy(() => {
@@ -256,7 +256,7 @@
       Tap on the map to explore chaos!<br />Can you find stable regions?
     </h2>
     <div
-      class="svg-container"
+      class="phase-space-container"
       onclick={handleCanvasClick}
       onkeydown={handleCanvasKeydown}
       onkeypress={handleCanvasKeypress}
@@ -266,8 +266,9 @@
       <PhaseSpace
         width={WIDTH}
         height={HEIGHT}
-        margin={MARGIN}
+        axisMargin={MARGIN}
         topMargin={TOP_MARGIN}
+        rightMargin={MARGIN}
         {trajectories}
         {colors}
         {clickTrajectory}
@@ -297,56 +298,70 @@
     </button>
     {#if isReadmeExpanded}
       <div class="rotor-explorer">
-        <div
-          class="svg-container"
-          onclick={handleCanvasClick}
-          onkeydown={handleCanvasKeydown}
-          onkeypress={handleCanvasKeypress}
-          role="button"
-          tabindex="0"
-        >
-          <PhaseSpace
-            width={WIDTH}
-            height={HEIGHT}
-            margin={MARGIN}
-            topMargin={TOP_MARGIN}
-            {clickTrajectory}
-            {animationPoints}
-          />
-          <Rotor theta={selectedTheta} p={selectedP} size={WIDTH} />
+        <div class="visualization-row">
+          <div
+            class="phase-space-container"
+            onclick={handleCanvasClick}
+            onkeydown={handleCanvasKeydown}
+            onkeypress={handleCanvasKeypress}
+            role="button"
+            tabindex="0"
+          >
+            <PhaseSpace
+              width={WIDTH * 0.6}
+              height={HEIGHT * 0.6}
+              axisMargin={MARGIN}
+              topMargin={TOP_MARGIN}
+              rightMargin={TOP_MARGIN}
+              trajectories="null"
+              colors="null"
+              {clickTrajectory}
+              {animationPoints}
+            />
+          </div>
+          <Rotor theta={selectedTheta} p={selectedP} size={WIDTH / 2} />
         </div>
-        <div class="parameter-control">
-          <div>Theta (θ) = {selectedTheta.toFixed(2)}</div>
-          <input
-            type="range"
-            min="0"
-            max={TWO_PI}
-            step="0.01"
-            bind:value={selectedTheta}
-            aria-label="Theta parameter"
-          />
-          <div>Momentum (p) = {selectedP.toFixed(2)}</div>
-          <input
-            type="range"
-            min={-PI}
-            max={PI}
-            step="0.01"
-            bind:value={selectedP}
-            aria-label="P parameter"
-          />
-          <div>Kick Strength (K) = {k.toFixed(2)}</div>
-          <!-- value={k} -->
-          <!-- oninput={handleSliderInput} -->
-          <!-- TODO start animation immediately in this case, potentially link it with rotor figure -->
-          <input
-            id="k-param"
-            type="range"
-            min="0"
-            max="5"
-            step="0.02"
-            bind:value={k}
-            aria-label="K parameter"
-          />
+        <div class="controls-row">
+          <div class="parameter-group">
+            <div class="parameter-label">
+              Theta (θ) = {selectedTheta.toFixed(2)}
+            </div>
+            <input
+              type="range"
+              min="0"
+              max={TWO_PI}
+              step="0.01"
+              bind:value={selectedTheta}
+              aria-label="Theta parameter"
+            />
+          </div>
+          <div class="parameter-group">
+            <div class="parameter-label">
+              Momentum (p) = {selectedP.toFixed(2)}
+            </div>
+            <input
+              type="range"
+              min={-PI}
+              max={PI}
+              step="0.01"
+              bind:value={selectedP}
+              aria-label="P parameter"
+            />
+          </div>
+          <div class="parameter-group">
+            <div class="parameter-label">
+              Kick Strength (K) = {k.toFixed(2)}
+            </div>
+            <input
+              id="k-param"
+              type="range"
+              min="0"
+              max="5"
+              step="0.02"
+              bind:value={k}
+              aria-label="K parameter"
+            />
+          </div>
         </div>
       </div>
       <div class="readme-content">
@@ -387,7 +402,7 @@
     position: relative;
     z-index: 10;
     text-shadow:
-      0 0 5px #00ff88,
+      /* 0 0 10px #00ff88, */
       0 0 20px #00ff88,
       0 0 30px #00ff88;
   }
@@ -402,7 +417,7 @@
     z-index: 10;
   }
 
-  .svg-container {
+  .phase-space-container {
     width: 100%;
     aspect-ratio: 8/6;
     display: flex;
@@ -458,6 +473,55 @@
     padding: 0.8rem;
     transition: background 0.3s;
     font-size: clamp(0.6rem, 2vw, 1rem);
+  }
+
+  .rotor-explorer {
+    display: flex;
+    flex-direction: column;
+    /* gap: 2rem; */
+    margin-top: 1rem;
+    background: #1a1a2e;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+  }
+
+  .visualization-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    /* gap: 1rem; */
+    align-items: center;
+    /* justify-items: center; */
+    /* position: relative; */
+  }
+
+  .controls-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0.5rem;
+  }
+
+  .parameter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .parameter-group input[type="range"] {
+    width: 100%;
+    margin: 0;
+  }
+
+  .parameter-label {
+    font-family: "Roboto Mono", monospace;
+    color: #8a8a9a;
+    text-align: center;
+    font-size: 0.9rem;
   }
 
   .readme-content {

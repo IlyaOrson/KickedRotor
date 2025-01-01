@@ -2,32 +2,38 @@
   type Point = [number, number];
   type Trajectory = Point[];
 
-  const {
+  //   interface Props {
+  //     width: number;
+  //     height: number;
+  //     axisMargin: number;
+  //     topMargin: number;
+  //     rightMargin: number;
+  //     trajectories: Trajectory[] | null;
+  //     colors: string[] | null;
+  //     clickTrajectory: Trajectory | null;
+  //     animationPoints: number | null;
+  //   }
+
+  let {
     width,
     height,
-    margin = 50,
-    topMargin = 5,
+    axisMargin = 50,
+    topMargin = 8,
+    rightMargin = 8,
     trajectories = null,
     colors = null,
-    clickTrajectory,
-    animationPoints,
-  } = $props<{
-    width: number;
-    height: number;
-    margin?: number;
-    topMargin?: number;
-    trajectories?: Trajectory[];
-    colors?: string[];
-    clickTrajectory: Trajectory | null;
-    animationPoints: number;
-  }>();
+    clickTrajectory = null,
+    animationPoints = null,
+  } = $props();
 
   const PI = Math.PI;
   const TWO_PI = 2 * PI;
 
   function toSVGCoords(theta: number, p: number): Point {
-    const x = margin + (theta / TWO_PI) * (width - 2 * margin);
-    const y = topMargin + ((p + PI) / TWO_PI) * (height - margin - topMargin);
+    const x =
+      axisMargin + (theta / TWO_PI) * (width - axisMargin - rightMargin);
+    const y =
+      topMargin + ((p + PI) / TWO_PI) * (height - axisMargin - topMargin);
     return [x, y];
   }
 </script>
@@ -44,44 +50,44 @@
   <!-- Grid -->
   {#each Array(10) as _, i}
     <line
-      x1={margin}
-      y1={topMargin + (i * (height - margin - topMargin)) / 9}
-      x2={width - margin}
-      y2={topMargin + (i * (height - margin - topMargin)) / 9}
+      x1={axisMargin}
+      y1={topMargin + (i * (height - axisMargin - topMargin)) / 9}
+      x2={width - rightMargin}
+      y2={topMargin + (i * (height - axisMargin - topMargin)) / 9}
       class="grid-line"
     />
     <line
-      x1={margin + (i * (width - 2 * margin)) / 9}
+      x1={axisMargin + (i * (width - axisMargin - rightMargin)) / 9}
       y1={topMargin}
-      x2={margin + (i * (width - 2 * margin)) / 9}
-      y2={height - margin}
+      x2={axisMargin + (i * (width - axisMargin - rightMargin)) / 9}
+      y2={height - axisMargin}
       class="grid-line"
     />
   {/each}
 
   <!-- Axes -->
   <line
-    x1={margin}
-    y1={height - margin}
-    x2={width - margin}
-    y2={height - margin}
+    x1={axisMargin}
+    y1={height - axisMargin}
+    x2={width - rightMargin}
+    y2={height - axisMargin}
     class="axis"
   />
   <line
-    x1={margin}
+    x1={axisMargin}
     y1={topMargin}
-    x2={margin}
-    y2={height - margin}
+    x2={axisMargin}
+    y2={height - axisMargin}
     class="axis"
   />
 
   <!-- Axis Labels and Ticks -->
   <text x={width / 2} y={height - 10} class="axis-label">Angle (θ)</text>
   <text
-    x={10}
+    x={height / 8}
     y={height / 2}
     class="axis-label"
-    transform="rotate(-90, 10, {height / 2})"
+    transform="rotate(-90, 10, {(height * 1) / 2})"
   >
     Momentum (p)
   </text>
@@ -89,9 +95,9 @@
   <!-- p-axis ticks -->
   {#each [-PI, -PI / 2, 0, PI / 2, PI] as p, i}
     {@const [_, y] = toSVGCoords(0, p)}
-    <line x1={margin - 5} y1={y} x2={margin} y2={y} class="tick" />
+    <line x1={axisMargin - 5} y1={y} x2={axisMargin} y2={y} class="tick" />
     <text
-      x={margin - 10}
+      x={axisMargin - 10}
       {y}
       class="tick-label y-axis-label"
       text-anchor="end"
@@ -106,14 +112,14 @@
     {@const [x, _] = toSVGCoords(theta, 0)}
     <line
       x1={x}
-      y1={height - margin}
+      y1={height - axisMargin}
       x2={x}
-      y2={height - margin + 5}
+      y2={height - axisMargin + 5}
       class="tick"
     />
     <text
       {x}
-      y={height - margin + 20}
+      y={height - axisMargin + 20}
       class="tick-label x-axis-label"
       text-anchor="middle"
     >
@@ -142,7 +148,7 @@
           cx={x}
           cy={y}
           r="1.5"
-          class="animated-point"
+          class={i === 0 ? "animated-point first-point" : "animated-point"}
           style="--point-index: {i}"
         />
       {/each}
@@ -200,9 +206,32 @@
     r: clamp(0.75px, 0.3vw, 3px);
   }
 
+  .first-point {
+    r: clamp(1.5px, 0.6vw, 6px);
+  }
+
   .animated-point {
     animation: pointAppear 0.3s ease-out forwards;
     opacity: 0;
+  }
+
+  .first-point {
+    animation: firstPointAppear 0.3s ease-out forwards;
+  }
+
+  @keyframes firstPointAppear {
+    from {
+      opacity: 0;
+      r: 0.5;
+    }
+    50% {
+      opacity: 1;
+      r: 5;
+    }
+    to {
+      opacity: 0.8;
+      r: 3.5;
+    }
   }
 
   @keyframes pointAppear {
