@@ -298,7 +298,8 @@
     </button>
     {#if isReadmeExpanded}
       <div class="rotor-explorer">
-        <div class="visualization-row">
+        <div class="trajectories-explorer">
+          <h3 class="trajectories-title">Positions after kicks</h3>
           <div
             class="phase-space-container"
             onclick={handleCanvasClick}
@@ -308,59 +309,70 @@
             tabindex="0"
           >
             <PhaseSpace
-              width={WIDTH * 0.6}
-              height={HEIGHT * 0.6}
+              width={WIDTH * 0.7}
+              height={HEIGHT * 0.7}
               axisMargin={MARGIN}
               topMargin={TOP_MARGIN}
               rightMargin={TOP_MARGIN}
-              trajectories="null"
-              colors="null"
+              trajectories={null}
+              colors={null}
               {clickTrajectory}
               {animationPoints}
             />
           </div>
-          <Rotor theta={selectedTheta} p={selectedP} size={WIDTH / 2} />
         </div>
-        <div class="controls-row">
-          <div class="parameter-group">
-            <div class="parameter-label">
-              Theta (θ) = {selectedTheta.toFixed(2)}
+        <div class="controls-explorer">
+          <h3 class="controls-title">Initial Position</h3>
+          <div class="controls-grid">
+            <div class="rotor-container">
+              <Rotor
+                theta={selectedTheta}
+                p={selectedP}
+                size={(WIDTH * 7) / 16}
+              />
             </div>
-            <input
-              type="range"
-              min="0"
-              max={TWO_PI}
-              step="0.01"
-              bind:value={selectedTheta}
-              aria-label="Theta parameter"
-            />
-          </div>
-          <div class="parameter-group">
-            <div class="parameter-label">
-              Momentum (p) = {selectedP.toFixed(2)}
+            <div class="parameters-container">
+              <div class="parameter-group">
+                <div class="parameter-label">
+                  Angle<br />θ = {selectedTheta.toFixed(2)}
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max={TWO_PI}
+                  step="0.01"
+                  bind:value={selectedTheta}
+                  aria-label="Theta parameter"
+                />
+              </div>
+              <div class="parameter-group">
+                <div class="parameter-label">
+                  Momentum<br />p = {selectedP.toFixed(2)}
+                </div>
+                <input
+                  type="range"
+                  min={-PI}
+                  max={PI}
+                  step="0.01"
+                  bind:value={selectedP}
+                  aria-label="P parameter"
+                />
+              </div>
+              <div class="parameter-group">
+                <div class="parameter-label">
+                  Kick<br />K = {k.toFixed(2)}
+                </div>
+                <input
+                  id="k-param"
+                  type="range"
+                  min="0"
+                  max="5"
+                  step="0.02"
+                  bind:value={k}
+                  aria-label="K parameter"
+                />
+              </div>
             </div>
-            <input
-              type="range"
-              min={-PI}
-              max={PI}
-              step="0.01"
-              bind:value={selectedP}
-              aria-label="P parameter"
-            />
-          </div>
-          <div class="parameter-group">
-            <div class="parameter-label">
-              Kick Strength (K) = {k.toFixed(2)}
-            </div>
-            <input
-              id="k-param"
-              type="range"
-              min="0"
-              max="5"
-              step="0.02"
-              bind:value={k}
-              aria-label="K parameter"
-            />
           </div>
         </div>
       </div>
@@ -446,7 +458,7 @@
     font-family: "Press Start 2P", monospace;
     color: #ca47eb;
     font-size: clamp(0.7rem, 1.2vw, 1rem);
-    margin-top: 1rem;
+    /* margin-top: 1rem; */
   }
 
   input[type="range"] {
@@ -478,31 +490,62 @@
   .rotor-explorer {
     display: flex;
     flex-direction: column;
-    /* gap: 2rem; */
     margin-top: 1rem;
-    background: #1a1a2e;
-    padding: 1rem;
+    /* padding: 1rem; */
     border-radius: 0.5rem;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    overflow-y: auto;
   }
 
-  .visualization-row {
+  @media (min-width: 1024px) {
+    .rotor-explorer {
+      flex-direction: row;
+    }
+  }
+
+  .trajectories-title,
+  .controls-title {
+    font-family: "Press Start 2P", monospace;
+    color: #9d00ff;
+    font-size: clamp(0.7rem, 1.2vw, 1rem);
+    margin: 0;
+  }
+
+  .trajectories-explorer {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    /* gap: 1rem; */
+    grid-template-columns: 1fr;
     align-items: center;
-    /* justify-items: center; */
-    /* position: relative; */
+    justify-items: center;
+    /* margin-bottom: 1rem; */
   }
 
-  .controls-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    padding: 1rem;
-    background: rgba(0, 0, 0, 0.2);
+  .parameters-container {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .controls-explorer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    /* padding: 1rem; */
+    /* background: rgba(0, 0, 0, 0.2); */
     border-radius: 0.5rem;
+  }
+
+  .rotor-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* gap: 1.5rem; */
   }
 
   .parameter-group {
