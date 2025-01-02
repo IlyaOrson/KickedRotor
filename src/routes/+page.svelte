@@ -38,8 +38,8 @@
     Math.floor(MIN_POINTS + (WIDTH / MAX_WIDTH) * (MAX_POINTS - MIN_POINTS))
   );
 
-  let selectedTheta = $state(0);
-  let selectedP = $state(PI);
+  let selectedTheta = $state(3.77);
+  let selectedP = $state(-1.03);
 
   $effect(() => {
     startTrajectoryAnimation(

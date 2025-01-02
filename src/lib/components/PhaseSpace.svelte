@@ -2,17 +2,17 @@
   type Point = [number, number];
   type Trajectory = Point[];
 
-  //   interface Props {
-  //     width: number;
-  //     height: number;
-  //     axisMargin: number;
-  //     topMargin: number;
-  //     rightMargin: number;
-  //     trajectories: Trajectory[] | null;
-  //     colors: string[] | null;
-  //     clickTrajectory: Trajectory | null;
-  //     animationPoints: number | null;
-  //   }
+  interface Props {
+    width: number;
+    height: number;
+    axisMargin: number;
+    topMargin: number;
+    rightMargin: number;
+    trajectories: Trajectory[] | null;
+    colors: string[] | null;
+    clickTrajectory: Trajectory | null;
+    animationPoints: number | null;
+  }
 
   let {
     width,
@@ -24,7 +24,7 @@
     colors = null,
     clickTrajectory = null,
     animationPoints = null,
-  } = $props();
+  }: Props = $props();
 
   const PI = Math.PI;
   const TWO_PI = 2 * PI;
@@ -148,7 +148,7 @@
           cx={x}
           cy={y}
           r="1.5"
-          class={i === 0 ? "animated-point first-point" : "animated-point"}
+          class={i === 0 ? "first-point" : "animated-point"}
           style="--point-index: {i}"
         />
       {/each}
@@ -199,44 +199,58 @@
     r: clamp(0.5px, 0.2vw, 1.5px);
   }
 
-  .click-trajectory circle {
+  /* .click-trajectory circle {
     fill: #00ff88;
     filter: drop-shadow(0 0 4px #00ff88);
     opacity: 0.8;
     r: clamp(0.75px, 0.3vw, 3px);
-  }
+  } */
 
   .first-point {
-    r: clamp(1.5px, 0.6vw, 6px);
-  }
-
-  .animated-point {
-    animation: pointAppear 0.3s ease-out forwards;
-    opacity: 0;
-  }
-
-  .first-point {
-    animation: firstPointAppear 0.3s ease-out forwards;
+    fill: #00ff88;
+    /* r: clamp(1px, 0.4vw, 3px); */
+    animation: firstPointAppear 2s ease-out infinite;
+    /* filter: drop-shadow(0 0 1px #FF00FF) drop-shadow(0 0 3px #FF00FF); */
+    mix-blend-mode: screen;
   }
 
   @keyframes firstPointAppear {
-    from {
-      opacity: 0;
-      r: 0.5;
+    0% {
+      opacity: 0.8;
+      r: 3;
+      filter: drop-shadow(0 0 1px #9d00ff);
+    }
+    25% {
+      opacity: 1;
+      r: 4;
+      filter: drop-shadow(0 0 2px #9d00ff);
     }
     50% {
-      opacity: 1;
-      r: 5;
-    }
-    to {
+      /* fill: #7FFF00; */
       opacity: 0.8;
-      r: 3.5;
+      r: 3;
+      filter: drop-shadow(0 0 3px #9d00ff);
     }
+    75% {
+      opacity: 1;
+      r: 4;
+      filter: drop-shadow(0 0 2px #9d00ff);
+    }
+    100% {
+      opacity: 0.8;
+      r: 3;
+      filter: drop-shadow(0 0 1px #9d00ff);
+    }
+  }
+
+  .animated-point {
+    fill: #00ff88;
+    animation: pointAppear 0.3s ease-out forwards;
   }
 
   @keyframes pointAppear {
     from {
-      opacity: 0;
+      opacity: 0.2;
       r: 0.5;
     }
     50% {
