@@ -434,6 +434,7 @@
     width: 100%;
     display: flex;
     justify-content: center;
+    min-height: 0;
   }
 
   .controls {
@@ -454,7 +455,7 @@
 
   .k-value {
     font-family: "Press Start 2P", monospace;
-    color: #ca47eb;
+    color: #FF00FF;
     font-size: clamp(0.7rem, 1.2vw, 1rem);
     /* margin-top: 1rem; */
   }
@@ -473,7 +474,7 @@
   }
 
   .toggle-button {
-    background: #6847eb;
+    background: #9D00FF;
     color: #e4e4ff;
     border: none;
     padding: 0.5rem 1rem;
