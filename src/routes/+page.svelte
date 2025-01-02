@@ -308,12 +308,13 @@
             role="button"
             tabindex="0"
           >
+            <!-- TODO handle svg coords transform correctly with other dimensions/margins -->
             <PhaseSpace
-              width={WIDTH * 0.7}
-              height={HEIGHT * 0.7}
+              width={WIDTH}
+              height={HEIGHT}
               axisMargin={MARGIN}
               topMargin={TOP_MARGIN}
-              rightMargin={TOP_MARGIN}
+              rightMargin={MARGIN}
               trajectories={null}
               colors={null}
               {clickTrajectory}
@@ -431,11 +432,8 @@
 
   .phase-space-container {
     width: 100%;
-    aspect-ratio: 8/6;
     display: flex;
     justify-content: center;
-    flex-shrink: 5;
-    min-height: 0;
   }
 
   .controls {
@@ -506,7 +504,7 @@
     font-family: "Press Start 2P", monospace;
     color: #9d00ff;
     font-size: clamp(0.7rem, 1.2vw, 1rem);
-    margin: 0;
+    margin: 1rem;
   }
 
   .trajectories-explorer {
