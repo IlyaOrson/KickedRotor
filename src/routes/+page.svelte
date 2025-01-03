@@ -2,6 +2,7 @@
   import README from "../../README.md";
   import Rotor from "$lib/components/Rotor.svelte";
   import PhaseSpace from "$lib/components/PhaseSpace.svelte";
+  import GithubLogo from "$lib/components/GithubLogo.svelte";
   import { onMount, onDestroy } from "svelte";
 
   // Types
@@ -37,13 +38,14 @@
   let pointsPerTrajectory = $derived(
     Math.floor(MIN_POINTS + (WIDTH / MAX_WIDTH) * (MAX_POINTS - MIN_POINTS))
   );
+  let pointsClickedTrajectory = $derived(pointsPerTrajectory * 10);
 
   let selectedTheta = $state(3.77);
   let selectedP = $state(-1.03);
 
   $effect(() => {
     startTrajectoryAnimation(
-      generateTrajectory(selectedTheta, selectedP, pointsPerTrajectory * 5)
+      generateTrajectory(selectedTheta, selectedP, pointsClickedTrajectory)
     );
   });
 
@@ -81,12 +83,6 @@
     const newP = mod(p + k * Math.sin(theta), TWO_PI) - PI; // Center around 0
     const newTheta = mod(theta + newP, TWO_PI);
     return [newTheta, newP];
-  }
-
-  function toSVGCoords(theta: number, p: number): Point {
-    const x = MARGIN + (theta / TWO_PI) * (WIDTH - 2 * MARGIN);
-    const y = TOP_MARGIN + ((p + PI) / TWO_PI) * (HEIGHT - MARGIN - TOP_MARGIN);
-    return [x, y];
   }
 
   function fromSVGCoords(x: number, y: number): Point {
@@ -211,7 +207,7 @@
     [selectedTheta, selectedP] = fromSVGCoords(svgPoint.x, svgPoint.y);
 
     startTrajectoryAnimation(
-      generateTrajectory(selectedTheta, selectedP, pointsPerTrajectory * 5)
+      generateTrajectory(selectedTheta, selectedP, pointsClickedTrajectory)
     );
   }
 
@@ -248,6 +244,7 @@
   }
 </script>
 
+<title>The Kicked Rotor - A Chaotic Playground!</title>
 <div class="kicked-rotor">
   <!-- <h1 class="title">The Kicked Rotor</h1> -->
   {#if !isReadmeExpanded}
@@ -293,9 +290,15 @@
     </div>
   {/if}
   <div class="readme-widget">
-    <button class="toggle-button" onclick={toggleReadme}>
-      {isReadmeExpanded ? "Playground" : "What is this?"}
-    </button>
+    <div class="button-row">
+      <div></div>
+      <button class="toggle-button" onclick={toggleReadme}>
+        {isReadmeExpanded ? "Playground" : "What is this?"}
+      </button>
+      <div class="github-link" style="margin-right: {MARGIN}px">
+        <GithubLogo />
+      </div>
+    </div>
     {#if isReadmeExpanded}
       <div class="rotor-explorer">
         <div class="trajectories-explorer">
@@ -323,7 +326,7 @@
           </div>
         </div>
         <div class="controls-explorer">
-          <h3 class="controls-title">Initial Position</h3>
+          <h3 class="controls-title">Initial position</h3>
           <div class="controls-grid">
             <div class="rotor-container">
               <Rotor
@@ -389,8 +392,8 @@
   /* https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000  */
   @import url("https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css");
 
-  @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
-  @import url("https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap");
+  @import url("https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Press+Start+2P&display=swap");
+  @import url("https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap");
 
   .kicked-rotor {
     padding: 1rem;
@@ -421,10 +424,10 @@
   }
 
   .subtitle {
-    font-family: "Roboto Mono", monospace;
+    font-family: "Chakra Petch", monospace;
     color: #00ff88;
-    font-size: clamp(0.6rem, 1vw, 1rem);
-    margin: 3;
+    font-size: clamp(0.6rem, 2vw, 1rem);
+    margin: 0;
     text-align: center;
     position: relative;
     z-index: 10;
@@ -455,7 +458,7 @@
 
   .k-value {
     font-family: "Press Start 2P", monospace;
-    color: #FF00FF;
+    color: #ff00ff;
     font-size: clamp(0.7rem, 1.2vw, 1rem);
     /* margin-top: 1rem; */
   }
@@ -474,7 +477,7 @@
   }
 
   .toggle-button {
-    background: #9D00FF;
+    background: #9d00ff;
     color: #e4e4ff;
     border: none;
     padding: 0.5rem 1rem;
@@ -484,6 +487,16 @@
     padding: 0.8rem;
     transition: background 0.3s;
     font-size: clamp(0.6rem, 2vw, 1rem);
+  }
+
+  .button-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+  }
+
+  .github-link {
+    justify-self: end;
   }
 
   .rotor-explorer {
@@ -497,6 +510,9 @@
   @media (min-width: 1024px) {
     .rotor-explorer {
       flex-direction: row;
+    }
+    .readme-widget {
+      max-width: 1024px;
     }
   }
 
@@ -560,7 +576,6 @@
   }
 
   .parameter-label {
-    font-family: "Roboto Mono", monospace;
     color: #8a8a9a;
     text-align: center;
     font-size: 0.9rem;
@@ -573,16 +588,38 @@
     padding: 1rem;
     border-radius: 0.5rem;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    overflow-y: auto;
+    /* overflow-y: auto; */
   }
 
   :global(body) {
     background: #0f0f1a;
-    color: #fff;
+    color: #e4e4ff;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 20px;
+    line-height: 1.6;
+  }
+
+  :global(a) {
+    color: #ff00ff;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  :global(a:hover) {
+    color: #ffa500;
+    text-decoration: underline;
+  }
+
+  :global(a:visited) {
+    color: #ff3864;
+  }
+
+  :global(a:active) {
+    color: #00ffff;
   }
 </style>
