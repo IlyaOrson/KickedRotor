@@ -130,28 +130,37 @@
   {/each}
 
   <!-- Trajectories -->
-  {#each trajectories as trajectory, i}
-    <g class="trajectory" style="--trajectory-color: {colors[i]}">
-      {#each trajectory as [theta, p]}
-        {@const [x, y] = toSVGCoords(theta, p)}
-        <circle cx={x} cy={y} r="1" />
-      {/each}
-    </g>
-  {/each}
+  {#if trajectories && colors}
+    {#each trajectories as trajectory, i}
+      <g class="trajectory" style="--trajectory-color: {colors[i]}">
+        {#each trajectory as [theta, p]}
+          {@const [x, y] = toSVGCoords(theta, p)}
+          <circle cx={x} cy={y} r="1" />
+        {/each}
+      </g>
+    {/each}
+  {/if}
 
   <!-- Click Trajectory -->
-  {#if clickTrajectory}
+  {#if clickTrajectory && animationPoints}
+    {@const [firstX, firstY] = toSVGCoords(
+      clickTrajectory[0][0],
+      clickTrajectory[0][1]
+    )}
     <g class="click-trajectory">
-      {#each clickTrajectory.slice(0, animationPoints + 1) as [theta, p], i}
+      <!-- Regular points -->
+      {#each clickTrajectory.slice(1, animationPoints + 1) as [theta, p], i}
         {@const [x, y] = toSVGCoords(theta, p)}
         <circle
           cx={x}
           cy={y}
           r="1.5"
-          class={i === 0 ? "first-point" : "animated-point"}
+          class="animated-point"
           style="--point-index: {i}"
         />
       {/each}
+      <!-- First point rendered last to stay visible always-->
+      <circle cx={firstX} cy={firstY} r="1.5" class="first-point" />
     </g>
   {/if}
 </svg>
@@ -208,38 +217,45 @@
 
   .first-point {
     fill: #00ff88;
-    /* r: clamp(1px, 0.4vw, 3px); */
     animation: firstPointAppear 2s ease-out infinite;
-    /* filter: drop-shadow(0 0 1px #FF00FF) drop-shadow(0 0 3px #FF00FF); */
     mix-blend-mode: screen;
+    isolation: isolate;
   }
 
   @keyframes firstPointAppear {
     0% {
-      opacity: 0.8;
-      r: 3;
-      filter: drop-shadow(0 0 1px #9d00ff);
+      fill: #7fff00;
+      r: 2;
+      filter: drop-shadow(0 0 2px #9d00ff);
+      filter: drop-shadow(0 0 4px #9d00ff);
+      filter: drop-shadow(0 0 8px #9d00ff);
+      filter: drop-shadow(0 0 16px #9d00ff);
     }
     25% {
-      opacity: 1;
+      fill: #ffa500;
       r: 4;
       filter: drop-shadow(0 0 2px #9d00ff);
     }
     50% {
-      /* fill: #7FFF00; */
-      opacity: 0.8;
+      fill: #ff3864;
       r: 3;
-      filter: drop-shadow(0 0 3px #9d00ff);
+      filter: drop-shadow(0 0 4px #9d00ff);
+      filter: drop-shadow(0 0 8px #9d00ff);
+      filter: drop-shadow(0 0 16px #9d00ff);
+      filter: drop-shadow(0 0 32px #9d00ff);
     }
     75% {
-      opacity: 1;
+      fill: #ffa500;
       r: 4;
       filter: drop-shadow(0 0 2px #9d00ff);
     }
     100% {
-      opacity: 0.8;
-      r: 3;
-      filter: drop-shadow(0 0 1px #9d00ff);
+      fill: #7fff00;
+      r: 2;
+      filter: drop-shadow(0 0 2px #9d00ff);
+      filter: drop-shadow(0 0 4px #9d00ff);
+      filter: drop-shadow(0 0 8px #9d00ff);
+      filter: drop-shadow(0 0 16px #9d00ff);
     }
   }
 
