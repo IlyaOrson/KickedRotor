@@ -458,12 +458,13 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 95vw;
-    max-height: 95vh;
+    width: 100%;
+    max-width: 100vw;
     margin: auto;
-    box-sizing: content-box;
+    box-sizing: border-box;
     position: relative;
     gap: 0.5rem;
+    overflow-x: hidden;
   }
 
   .title {
@@ -558,24 +559,25 @@
   input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: #00ff88;
     cursor: pointer;
     box-shadow: 0 0 8px #00ff88;
     transition: all 0.2s ease;
     border: 2px solid #ffffff;
+    margin-top: -1px; /* Align correctly with track */
   }
 
   input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
+    transform: scale(1.15);
     box-shadow: 0 0 14px #00ff88, 0 0 6px rgba(255, 255, 255, 0.8);
   }
 
   input[type="range"]::-moz-range-thumb {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     background: #00ff88;
     cursor: pointer;
@@ -585,7 +587,7 @@
   }
 
   input[type="range"]::-moz-range-thumb:hover {
-    transform: scale(1.2);
+    transform: scale(1.15);
     box-shadow: 0 0 14px #00ff88, 0 0 6px rgba(255, 255, 255, 0.8);
   }
 
@@ -744,9 +746,19 @@
   }
 
   .controls-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    /* gap: 1.5rem; */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+  }
+
+  @media (min-width: 600px) {
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
   }
 
   .parameter-group {
@@ -774,11 +786,17 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: 0.75rem;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
     width: 100%;
     text-align: left;
+  }
+
+  @media (min-width: 768px) {
+    .readme-content {
+      padding: 1.5rem;
+    }
   }
 
   :global(body) {
