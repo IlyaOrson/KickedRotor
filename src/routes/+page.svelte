@@ -3,7 +3,6 @@
   import Rotor from "$lib/components/Rotor.svelte";
   import PhaseSpace from "$lib/components/PhaseSpace.svelte";
   import GithubLogo from "$lib/components/GithubLogo.svelte";
-  import KickDecomposition from "$lib/components/KickDecomposition.svelte";
   import { onMount, onDestroy } from "svelte";
 
   // Types
@@ -377,6 +376,35 @@
       />
     </div>
 
+    <!-- Lyapunov Exponent Chaos Diagnostic Widget (Placed under canvas) -->
+    <div class="lyapunov-widget">
+      <div class="lyapunov-header">
+        <span class="lyapunov-title">Chaos Diagnostic (Lyapunov Exponent)</span>
+        <span class="lyapunov-value" class:chaotic={lyapunovData.lambda > 0.1} class:regular={lyapunovData.lambda <= 0.1}>
+          λ ≈ {lyapunovData.lambda.toFixed(3)} 
+          ({lyapunovData.lambda > 0.1 ? 'Chaotic' : 'Orderly'})
+        </span>
+      </div>
+      
+      {#if lyapunovData.history.length > 0}
+        {@const path = getSparklinePath(lyapunovData.history)}
+        {@const zeroY = getZeroY(lyapunovData.history)}
+        <div class="sparkline-container">
+          <svg class="sparkline" viewBox="0 0 200 40">
+            {#if zeroY !== null}
+              <line x1="0" y1={zeroY} x2="200" y2={zeroY} class="baseline" />
+            {/if}
+            <path d={path} class="sparkpath" />
+          </svg>
+          <div class="sparkline-labels">
+            <span>Kick 1</span>
+            <span>Convergence over 200 kicks</span>
+            <span>Kick 200</span>
+          </div>
+        </div>
+      {/if}
+    </div>
+
     <div class="controls">
       <div class="parameter-control">
         <div class="k-value">Kick Strength = {k.toFixed(2)}</div>
@@ -390,35 +418,6 @@
           oninput={handleSliderInput}
           aria-label="K parameter"
         />
-      </div>
-
-      <!-- Lyapunov Exponent Chaos Diagnostic Widget -->
-      <div class="lyapunov-widget">
-        <div class="lyapunov-header">
-          <span class="lyapunov-title">Chaos Diagnostic (Lyapunov Exponent)</span>
-          <span class="lyapunov-value" class:chaotic={lyapunovData.lambda > 0.1} class:regular={lyapunovData.lambda <= 0.1}>
-            λ ≈ {lyapunovData.lambda.toFixed(3)} 
-            ({lyapunovData.lambda > 0.1 ? 'Chaotic' : 'Orderly'})
-          </span>
-        </div>
-        
-        {#if lyapunovData.history.length > 0}
-          {@const path = getSparklinePath(lyapunovData.history)}
-          {@const zeroY = getZeroY(lyapunovData.history)}
-          <div class="sparkline-container">
-            <svg class="sparkline" viewBox="0 0 200 40">
-              {#if zeroY !== null}
-                <line x1="0" y1={zeroY} x2="200" y2={zeroY} class="baseline" />
-              {/if}
-              <path d={path} class="sparkpath" />
-            </svg>
-            <div class="sparkline-labels">
-              <span>Kick 1</span>
-              <span>Convergence over 200 kicks</span>
-              <span>Kick 200</span>
-            </div>
-          </div>
-        {/if}
       </div>
     </div>
   {/if}
@@ -458,13 +457,37 @@
               {animationPoints}
             />
           </div>
-           <!-- Speed Control for Explorer moved to params -->
-          <!-- <div class="explorer-controls">
-            <button class="speed-button" onclick={toggleSpeed}>
-                {isSlowMode ? "Speed Up" : "Slow Down"}
-            </button>
-          </div> -->
+
+          <!-- Lyapunov Exponent Chaos Diagnostic Widget (Placed under canvas) -->
+          <div class="lyapunov-widget" style="margin-top: 1rem;">
+            <div class="lyapunov-header">
+              <span class="lyapunov-title">Chaos Diagnostic (Lyapunov Exponent)</span>
+              <span class="lyapunov-value" class:chaotic={lyapunovData.lambda > 0.1} class:regular={lyapunovData.lambda <= 0.1}>
+                λ ≈ {lyapunovData.lambda.toFixed(3)} 
+                ({lyapunovData.lambda > 0.1 ? 'Chaotic' : 'Orderly'})
+              </span>
+            </div>
+            
+            {#if lyapunovData.history.length > 0}
+              {@const path = getSparklinePath(lyapunovData.history)}
+              {@const zeroY = getZeroY(lyapunovData.history)}
+              <div class="sparkline-container">
+                <svg class="sparkline" viewBox="0 0 200 40">
+                  {#if zeroY !== null}
+                    <line x1="0" y1={zeroY} x2="200" y2={zeroY} class="baseline" />
+                  {/if}
+                  <path d={path} class="sparkpath" />
+                </svg>
+                <div class="sparkline-labels">
+                  <span>Kick 1</span>
+                  <span>Convergence over 200 kicks</span>
+                  <span>Kick 200</span>
+                </div>
+              </div>
+            {/if}
+          </div>
         </div>
+
         <div class="controls-explorer">
           <h3 class="controls-title">Initial position</h3>
           <div class="controls-grid">
@@ -475,11 +498,6 @@
                 {k}
                 size={rotorSize}
               />
-              <KickDecomposition
-                theta={currentRotorState.theta}
-                {k}
-                size={rotorSize}
-                />
             </div>
             <div class="parameters-container">
                <!-- Sliders update the initial state and trigger new trajectory -->
@@ -527,34 +545,6 @@
                <button class="speed-button" onclick={toggleSpeed}>
                  {isSlowMode ? "Speed Up" : "Slow Down"}
                </button>
-
-               <!-- Lyapunov Exponent Chaos Diagnostic Widget (Compact) -->
-               <div class="lyapunov-widget compact">
-                 <div class="lyapunov-header">
-                   <span class="lyapunov-title">Chaos Diagnostic</span>
-                   <span class="lyapunov-value" class:chaotic={lyapunovData.lambda > 0.1} class:regular={lyapunovData.lambda <= 0.1}>
-                     λ ≈ {lyapunovData.lambda.toFixed(3)}
-                   </span>
-                 </div>
-                 
-                 {#if lyapunovData.history.length > 0}
-                   {@const path = getSparklinePath(lyapunovData.history)}
-                   {@const zeroY = getZeroY(lyapunovData.history)}
-                   <div class="sparkline-container">
-                     <svg class="sparkline" viewBox="0 0 200 40">
-                       {#if zeroY !== null}
-                         <line x1="0" y1={zeroY} x2="200" y2={zeroY} class="baseline" />
-                       {/if}
-                       <path d={path} class="sparkpath" />
-                     </svg>
-                     <div class="sparkline-labels">
-                       <span>Kick 1</span>
-                       <span>200 kicks</span>
-                       <span>Kick 200</span>
-                     </div>
-                   </div>
-                 {/if}
-               </div>
             </div>
           </div>
         </div>
@@ -796,6 +786,7 @@
     /* padding: 1rem; */
     border-radius: 0.5rem;
     width: 100%;
+    gap: 2rem;
   }
 
   @media (min-width: 1024px) {
@@ -966,22 +957,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    margin-top: 0.5rem;
-    transition: all 0.3s ease;
-  }
-
-  .lyapunov-widget.compact {
-    max-width: 200px;
-    padding: 0.8rem;
     margin-top: 1rem;
-  }
-
-  .lyapunov-widget.compact .lyapunov-title {
-    font-size: 0.65rem;
-  }
-
-  .lyapunov-widget.compact .lyapunov-value {
-    font-size: 0.65rem;
+    transition: all 0.3s ease;
   }
 
   .lyapunov-header {

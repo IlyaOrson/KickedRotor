@@ -70,6 +70,12 @@
     centerY - 0.5 * innerRadius * Math.sin(theta / 2)
   );
 
+  // Kick Vector Midpoint and Label Positioning (outward perpendicular offset)
+  let kickMidX = $derived((rotorEndX + kickEndX) / 2);
+  let kickMidY = $derived((rotorEndY + kickEndY) / 2);
+  let kickLabelX = $derived(kickMidX + 14 * Math.cos(theta));
+  let kickLabelY = $derived(kickMidY - 14 * Math.sin(theta));
+
 
   let arcPath = $derived.by(() => {
     const startX = centerX + innerRadius;
@@ -137,6 +143,16 @@
       d={`M ${kickEndX} ${kickEndY} L ${kickHead1X} ${kickHead1Y} L ${kickHead2X} ${kickHead2Y} Z`}
       class="kick-head"
     />
+    <!-- Kick Vector Label -->
+    <text 
+      x={kickLabelX} 
+      y={kickLabelY} 
+      class="kick-label"
+      text-anchor="middle"
+      dominant-baseline="middle"
+    >
+      K sin(θ)
+    </text>
   {/if}
 
   <path d={arcPath} class="angle-arc" />
@@ -149,6 +165,7 @@
 <style>
   .rotor {
     background: transparent;
+    overflow: visible;
   }
 
   .angle-ref {
@@ -243,5 +260,13 @@
       transform: rotate(360deg);
       transform-origin: 50% 50%;
     }
+  }
+
+  .kick-label {
+    fill: #ffa500;
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    font-weight: bold;
+    text-shadow: 0 0 4px rgba(255, 165, 0, 0.5);
   }
 </style>
