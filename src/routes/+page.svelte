@@ -13,7 +13,7 @@
 
   // Constants
   const ASPECT_RATIO = 2 / 3; // height = width * 2/3
-  const MAX_WIDTH = 600;
+  const MAX_WIDTH = 800; // Increased default playground size
   const MARGIN = 50;
   const TOP_MARGIN = 8;
   const NUM_TRAJECTORIES = 10;
@@ -32,6 +32,7 @@
   let animationPoints = $state(0);
   let animationFrameId: number | null = null;
   let animationTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  let isReadmeExpanded = $state(false);
 
   let WIDTH = $state(MAX_WIDTH);
   let HEIGHT = $derived(WIDTH * ASPECT_RATIO);
@@ -40,6 +41,11 @@
     Math.floor(MIN_POINTS + (WIDTH / MAX_WIDTH) * (MAX_POINTS - MIN_POINTS))
   );
   let pointsClickedTrajectory = $derived(pointsPerTrajectory * 10);
+
+  // Responsive sizes for the explanation (Readme expanded) view columns
+  let explorerWidth = $derived(isReadmeExpanded ? Math.min(WIDTH, 520) : WIDTH);
+  let explorerHeight = $derived(explorerWidth * ASPECT_RATIO);
+  let rotorSize = $derived(isReadmeExpanded ? Math.min(WIDTH * 0.35, 240) : (WIDTH * 7) / 16);
 
   let selectedTheta = $state(3.77);
   let selectedP = $state(-1.03);
@@ -59,7 +65,7 @@
 
   onMount(() => {
     const updateDimensions = () => {
-      WIDTH = Math.min(window.innerWidth, MAX_WIDTH);
+      WIDTH = Math.max(280, Math.min(window.innerWidth - 40, MAX_WIDTH));
     };
 
     updateDimensions();
@@ -90,10 +96,10 @@
     return [newTheta, newP];
   }
 
-  function fromSVGCoords(x: number, y: number): Point {
-    const theta = ((x - MARGIN) / (WIDTH - 2 * MARGIN)) * TWO_PI;
+  function fromSVGCoords(x: number, y: number, currentWidth: number, currentHeight: number): Point {
+    const theta = ((x - MARGIN) / (currentWidth - 2 * MARGIN)) * TWO_PI;
     // Inverse of toSVGCoords for y
-    const p = ((y - TOP_MARGIN) / (HEIGHT - MARGIN - TOP_MARGIN)) * TWO_PI - PI;
+    const p = ((y - TOP_MARGIN) / (currentHeight - MARGIN - TOP_MARGIN)) * TWO_PI - PI;
     return [theta, p];
   }
 
@@ -183,12 +189,12 @@
     k = value; // Immediate update
   }
 
-  function isWithinPhaseBounds(x: number, y: number): boolean {
+  function isWithinPhaseBounds(x: number, y: number, currentWidth: number, currentHeight: number): boolean {
     return (
       x >= MARGIN &&
-      x <= WIDTH - MARGIN &&
+      x <= currentWidth - MARGIN &&
       y >= TOP_MARGIN &&
-      y <= HEIGHT - MARGIN
+      y <= currentHeight - MARGIN
     );
   }
 
@@ -206,13 +212,16 @@
     // Transform the point from screen coordinates to SVG coordinates
     const svgPoint = pt.matrixTransform(CTM.inverse());
 
+    const currentWidth = isReadmeExpanded ? explorerWidth : WIDTH;
+    const currentHeight = isReadmeExpanded ? explorerHeight : HEIGHT;
+
     // Check if click is within phase space bounds
-    if (!isWithinPhaseBounds(svgPoint.x, svgPoint.y)) {
+    if (!isWithinPhaseBounds(svgPoint.x, svgPoint.y, currentWidth, currentHeight)) {
       return;
     }
 
     // Convert SVG coordinates to phase space coordinates
-    [selectedTheta, selectedP] = fromSVGCoords(svgPoint.x, svgPoint.y);
+    [selectedTheta, selectedP] = fromSVGCoords(svgPoint.x, svgPoint.y, currentWidth, currentHeight);
 
     startTrajectoryAnimation(
       generateTrajectory(selectedTheta, selectedP, pointsClickedTrajectory)
@@ -258,7 +267,6 @@
   });
 
   // State for README widget
-  let isReadmeExpanded = $state(false);
 
   function toggleReadme() {
     isReadmeExpanded = !isReadmeExpanded;
@@ -346,10 +354,9 @@
             tabindex="0"
             aria-label="Interactive phase space plot. Click to spawn a trajectory, or use arrow keys to navigate and Enter or Space to run."
           >
-            <!-- TODO handle svg coords transform correctly with other dimensions/margins -->
             <PhaseSpace
-              width={WIDTH}
-              height={HEIGHT}
+              width={explorerWidth}
+              height={explorerHeight}
               axisMargin={MARGIN}
               topMargin={TOP_MARGIN}
               rightMargin={MARGIN}
@@ -374,12 +381,12 @@
                 theta={currentRotorState.theta}
                 p={currentRotorState.p}
                 {k}
-                size={(WIDTH * 7) / 16}
+                size={rotorSize}
               />
               <KickDecomposition
                 theta={currentRotorState.theta}
                 {k}
-                size={(WIDTH * 7) / 16}
+                size={rotorSize}
                 />
             </div>
             <div class="parameters-container">
@@ -671,10 +678,14 @@
 
   @media (min-width: 1024px) {
     .rotor-explorer {
-      flex-direction: row;
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 2rem;
+      align-items: start;
+      max-width: 100%;
     }
     .readme-widget {
-      max-width: 1024px;
+      max-width: 1200px;
     }
   }
 
