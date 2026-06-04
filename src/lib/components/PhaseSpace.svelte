@@ -135,7 +135,7 @@
       <g class="trajectory" style="--trajectory-color: {colors[i]}">
         {#each trajectory as [theta, p]}
           {@const [x, y] = toSVGCoords(theta, p)}
-          <circle cx={x} cy={y} r="1" />
+          <circle cx={x} cy={y} style="r: clamp(0.5px, 0.2vw, 1.5px);" />
         {/each}
       </g>
     {/each}
@@ -205,7 +205,6 @@
     fill: var(--trajectory-color);
     opacity: 0.6;
     filter: drop-shadow(0 0 2px var(--trajectory-color));
-    r: clamp(0.5px, 0.2vw, 1.5px);
   }
 
   /* .click-trajectory circle {

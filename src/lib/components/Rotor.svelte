@@ -2,9 +2,10 @@
   interface Props {
     theta: number;
     p: number;
+    k: number; // Kick strength
     size: number;
   }
-  let { theta, p, size }: Props = $props();
+  let { theta, p, k, size }: Props = $props();
 
   let radius = $derived(size / 3);
   let innerRadius = $derived(radius / 3);
@@ -23,6 +24,7 @@
   let arrowEndX = $derived(rotorEndX - componentY * normalizedP);
   let arrowEndY = $derived(rotorEndY + componentX * normalizedP);
 
+  // Arrow Head for Momentum
   let arrowHead1X = $derived(
     arrowEndX + headDirection * headSize * Math.cos(theta - Math.PI / 4)
   );
@@ -34,6 +36,29 @@
   );
   let arrowHead2Y = $derived(
     arrowEndY - headDirection * headSize * Math.sin(theta - (3 * Math.PI) / 4)
+  );
+
+  // Kick Vector Calculation
+  // Kick is dp = K * sin(theta)
+  // It acts in the direction of momentum (tangential)
+  let kickMagnitude = $derived(k * Math.sin(theta));
+  let normalizedKick = $derived(-kickMagnitude / Math.PI); // Scale same as p
+  let kickHeadDirection = $derived(kickMagnitude > 0 ? 1 : -1);
+
+  let kickEndX = $derived(rotorEndX - componentY * normalizedKick);
+  let kickEndY = $derived(rotorEndY + componentX * normalizedKick);
+
+  let kickHead1X = $derived(
+    kickEndX + kickHeadDirection * headSize * Math.cos(theta - Math.PI / 4)
+  );
+  let kickHead1Y = $derived(
+    kickEndY - kickHeadDirection * headSize * Math.sin(theta - Math.PI / 4)
+  );
+  let kickHead2X = $derived(
+    kickEndX + kickHeadDirection * headSize * Math.cos(theta - (3 * Math.PI) / 4)
+  );
+  let kickHead2Y = $derived(
+    kickEndY - kickHeadDirection * headSize * Math.sin(theta - (3 * Math.PI) / 4)
   );
 
   let pPositionX = $derived(centerX + 1.2 * componentX);
@@ -121,6 +146,21 @@
     class="arrow-head"
   />
 
+  <!-- Kick Vector -->
+  {#if Math.abs(kickMagnitude) > 0.01}
+    <line
+      x1={rotorEndX}
+      y1={rotorEndY}
+      x2={kickEndX}
+      y2={kickEndY}
+      class="kick-arrow"
+    />
+    <path
+      d={`M ${kickEndX} ${kickEndY} L ${kickHead1X} ${kickHead1Y} L ${kickHead2X} ${kickHead2Y} Z`}
+      class="kick-head"
+    />
+  {/if}
+
   <path d={arcPath} class="angle-arc" />
 
   <!-- Labels -->
@@ -161,12 +201,27 @@
   .momentum-arrow {
     stroke: #00ffff;
     stroke-width: 2px;
+    opacity: 0.7;
   }
 
   .arrow-head {
     fill: #00ffff;
     stroke: #00ffff;
     stroke-width: 1px;
+    opacity: 0.7;
+  }
+
+  .kick-arrow {
+    stroke: #ffa500;
+    stroke-width: 3px;
+    filter: drop-shadow(0 0 2px #ffa500);
+  }
+
+  .kick-head {
+    fill: #ffa500;
+    stroke: #ffa500;
+    stroke-width: 1px;
+    filter: drop-shadow(0 0 2px #ffa500);
   }
 
   .angle-arc {

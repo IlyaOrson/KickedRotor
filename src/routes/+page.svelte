@@ -3,6 +3,7 @@
   import Rotor from "$lib/components/Rotor.svelte";
   import PhaseSpace from "$lib/components/PhaseSpace.svelte";
   import GithubLogo from "$lib/components/GithubLogo.svelte";
+  import KickDecomposition from "$lib/components/KickDecomposition.svelte";
   import { onMount, onDestroy } from "svelte";
 
   // Types
@@ -30,6 +31,7 @@
   let clickTrajectory = $state<Trajectory | null>(null);
   let animationPoints = $state(0);
   let animationFrameId: number | null = null;
+  let animationTimeoutId: ReturnType<typeof setTimeout> | null = null;
   let debounceDelay = $state(300);
 
   let WIDTH = $state(MAX_WIDTH);
@@ -42,6 +44,13 @@
 
   let selectedTheta = $state(3.77);
   let selectedP = $state(-1.03);
+
+  // Rotor Animation State
+  let currentRotorState = $state<{ theta: number; p: number }>({
+    theta: 3.77,
+    p: -1.03,
+  });
+  let isSlowMode = $state(true); // Default to slow mode for explainability
 
   $effect(() => {
     startTrajectoryAnimation(
@@ -129,35 +138,61 @@
     // Cancel any existing animation
     if (animationFrameId) {
       cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+    if (animationTimeoutId) {
+      clearTimeout(animationTimeoutId);
+      animationTimeoutId = null;
     }
 
     // Reset animation state
     animationPoints = 0;
     clickTrajectory = trajectory;
+    currentRotorState = {
+      theta: trajectory[0][0],
+      p: trajectory[0][1],
+    };
 
     // Start animation
     const animate = () => {
       if (animationPoints >= trajectory.length - 1) {
-        cancelAnimationFrame(animationFrameId!);
+        // Stop
       } else {
         animationPoints++;
-        animationFrameId = requestAnimationFrame(animate);
+        const [theta, p] = trajectory[animationPoints];
+        currentRotorState = { theta, p };
+
+        if (!isReadmeExpanded || !isSlowMode) {
+            // Fast mode (default or requested)
+            animationFrameId = requestAnimationFrame(animate);
+        } else {
+            // Slow mode
+            animationTimeoutId = setTimeout(() => {
+                animate();
+            }, 600); // 600ms delays
+        }
       }
     };
 
-    animationFrameId = requestAnimationFrame(animate);
+    if (!isReadmeExpanded || !isSlowMode) {
+         animationFrameId = requestAnimationFrame(animate);
+    } else {
+         // Initial delay?
+         animationTimeoutId = setTimeout(animate, 600);
+    }
   }
 
   function debounce<T extends (...args: any[]) => void>(
     func: T,
-    delay: number = 300
+    delay: number | (() => number) = 300
   ): (...args: Parameters<T>) => void {
     let timeoutId: ReturnType<typeof setTimeout>;
     return (...args: Parameters<T>) => {
       clearTimeout(timeoutId);
+      const actualDelay = typeof delay === 'function' ? delay() : delay;
       timeoutId = setTimeout(() => {
         func(...args);
-      }, delay);
+      }, actualDelay);
     };
   }
 
@@ -234,6 +269,9 @@
     if (animationFrameId) {
       cancelAnimationFrame(animationFrameId);
     }
+    if (animationTimeoutId) {
+      clearTimeout(animationTimeoutId);
+    }
   });
 
   // State for README widget
@@ -241,6 +279,16 @@
 
   function toggleReadme() {
     isReadmeExpanded = !isReadmeExpanded;
+    // Restart animation to pick up mode change
+    startTrajectoryAnimation(
+        generateTrajectory(selectedTheta, selectedP, pointsClickedTrajectory)
+    );
+  }
+
+  function toggleSpeed() {
+      isSlowMode = !isSlowMode;
+      // Restart animation to pick up speed change
+      startTrajectoryAnimation(clickTrajectory || generateTrajectory(selectedTheta, selectedP, pointsClickedTrajectory));
   }
 </script>
 
@@ -292,9 +340,11 @@
   <div class="readme-widget">
     <div class="button-row">
       <div></div>
+      <div class="toggle-group">
       <button class="toggle-button" onclick={toggleReadme}>
         {isReadmeExpanded ? "Playground" : "What is this?"}
       </button>
+      </div>
       <div class="github-link" style="margin-right: {MARGIN}px">
         <GithubLogo />
       </div>
@@ -324,18 +374,31 @@
               {animationPoints}
             />
           </div>
+           <!-- Speed Control for Explorer moved to params -->
+          <!-- <div class="explorer-controls">
+            <button class="speed-button" onclick={toggleSpeed}>
+                {isSlowMode ? "Speed Up" : "Slow Down"}
+            </button>
+          </div> -->
         </div>
         <div class="controls-explorer">
           <h3 class="controls-title">Initial position</h3>
           <div class="controls-grid">
             <div class="rotor-container">
               <Rotor
-                theta={selectedTheta}
-                p={selectedP}
+                theta={currentRotorState.theta}
+                p={currentRotorState.p}
+                {k}
                 size={(WIDTH * 7) / 16}
               />
+              <KickDecomposition
+                theta={currentRotorState.theta}
+                {k}
+                size={(WIDTH * 7) / 16}
+                />
             </div>
             <div class="parameters-container">
+               <!-- Sliders update the initial state and trigger new trajectory -->
               <div class="parameter-group">
                 <div class="parameter-label">
                   Angle<br />θ = {selectedTheta.toFixed(2)}
@@ -376,6 +439,10 @@
                   aria-label="K parameter"
                 />
               </div>
+               <!-- Speed Control -->
+               <button class="speed-button" onclick={toggleSpeed}>
+                 {isSlowMode ? "Speed Up" : "Slow Down"}
+               </button>
             </div>
           </div>
         </div>
@@ -474,6 +541,9 @@
     width: 100%;
     max-width: 800px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .toggle-button {
@@ -488,11 +558,36 @@
     transition: background 0.3s;
     font-size: clamp(0.6rem, 2vw, 1rem);
   }
+  
+  .speed-button {
+      background: #ffa500;
+      color: #0f0f1a;
+      border: none;
+      padding: 0.5rem 0;
+      font-family: "Press Start 2P", monospace;
+      cursor: pointer;
+      border-radius: 0.25rem;
+      font-size: 0.7rem;
+      margin-top: 1rem;
+      width: 100%;
+      transition: background 0.3s;
+  }
+  
+  .speed-button:hover {
+      background: #ffdb4d;
+  }
+
+  .toggle-group {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+  }
 
   .button-row {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
+    width: 100%;
   }
 
   .github-link {
@@ -505,6 +600,7 @@
     margin-top: 1rem;
     /* padding: 1rem; */
     border-radius: 0.5rem;
+    width: 100%;
   }
 
   @media (min-width: 1024px) {
@@ -531,6 +627,13 @@
     justify-items: center;
     /* margin-bottom: 1rem; */
   }
+  
+
+  /* .explorer-controls {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+  } */
 
   .parameters-container {
     grid-column: 2;
@@ -553,8 +656,10 @@
 
   .rotor-container {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 1rem;
   }
 
   .controls-grid {
@@ -589,6 +694,8 @@
     border-radius: 0.5rem;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     /* overflow-y: auto; */
+    width: 100%;
+    text-align: left;
   }
 
   :global(body) {
