@@ -247,14 +247,24 @@
   }
 
   function handleCanvasKeydown(event: KeyboardEvent) {
-    if (event.key === "Enter" || event.key === " ") {
+    const step = TWO_PI / 100;
+    if (event.key === "ArrowLeft") {
       event.preventDefault();
-    }
-  }
-
-  function handleCanvasKeypress(event: KeyboardEvent) {
-    if (event.key === "Enter" || event.key === " ") {
+      selectedTheta = mod(selectedTheta - step, TWO_PI);
+    } else if (event.key === "ArrowRight") {
       event.preventDefault();
+      selectedTheta = mod(selectedTheta + step, TWO_PI);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      selectedP = Math.min(PI, Math.max(-PI, selectedP + step));
+    } else if (event.key === "ArrowDown") {
+      event.preventDefault();
+      selectedP = Math.min(PI, Math.max(-PI, selectedP - step));
+    } else if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      startTrajectoryAnimation(
+        generateTrajectory(selectedTheta, selectedP, pointsClickedTrajectory)
+      );
     }
   }
 
@@ -292,7 +302,9 @@
   }
 </script>
 
-<title>The Kicked Rotor - A Chaotic Playground!</title>
+<svelte:head>
+  <title>The Kicked Rotor - A Chaotic Playground!</title>
+</svelte:head>
 <div class="kicked-rotor">
   <!-- <h1 class="title">The Kicked Rotor</h1> -->
   {#if !isReadmeExpanded}
@@ -304,9 +316,9 @@
       class="phase-space-container"
       onclick={handleCanvasClick}
       onkeydown={handleCanvasKeydown}
-      onkeypress={handleCanvasKeypress}
       role="button"
       tabindex="0"
+      aria-label="Interactive phase space plot. Click to spawn a trajectory, or use arrow keys to navigate and Enter or Space to run."
     >
       <PhaseSpace
         width={WIDTH}
@@ -325,7 +337,7 @@
       <div class="parameter-control">
         <div class="k-value">Kick Strength = {k.toFixed(2)}</div>
         <input
-          id="k-param"
+          id="k-param-playground"
           type="range"
           min="0"
           max="5"
@@ -357,9 +369,9 @@
             class="phase-space-container"
             onclick={handleCanvasClick}
             onkeydown={handleCanvasKeydown}
-            onkeypress={handleCanvasKeypress}
             role="button"
             tabindex="0"
+            aria-label="Interactive phase space plot. Click to spawn a trajectory, or use arrow keys to navigate and Enter or Space to run."
           >
             <!-- TODO handle svg coords transform correctly with other dimensions/margins -->
             <PhaseSpace
@@ -430,7 +442,7 @@
                   Kick<br />K = {k.toFixed(2)}
                 </div>
                 <input
-                  id="k-param"
+                  id="k-param-readme"
                   type="range"
                   min="0"
                   max="5"
@@ -459,8 +471,7 @@
   /* https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000  */
   @import url("https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css");
 
-  @import url("https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Press+Start+2P&display=swap");
-  @import url("https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap");
+  @import url("https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Press+Start+2P&display=swap");
 
   .kicked-rotor {
     padding: 1rem;

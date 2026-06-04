@@ -70,28 +70,6 @@
     centerY - 0.5 * innerRadius * Math.sin(theta / 2)
   );
 
-  // Grid pattern definition
-  let gridSize = $derived(size / 20);
-  let gridLines = $derived(() => {
-    let lines = [];
-    for (let i = gridSize; i < size; i += gridSize) {
-      lines.push({
-        x1: 0,
-        y1: i,
-        x2: size,
-        y2: i,
-        opacity: i % (gridSize * 2) === 0 ? 0.3 : 0.1,
-      });
-      lines.push({
-        x1: i,
-        y1: 0,
-        x2: i,
-        y2: size,
-        opacity: i % (gridSize * 2) === 0 ? 0.3 : 0.1,
-      });
-    }
-    return lines;
-  });
 
   let arcPath = $derived.by(() => {
     const startX = centerX + innerRadius;
