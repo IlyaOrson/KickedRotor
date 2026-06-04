@@ -32,7 +32,6 @@
   let animationPoints = $state(0);
   let animationFrameId: number | null = null;
   let animationTimeoutId: ReturnType<typeof setTimeout> | null = null;
-  let debounceDelay = $state(300);
 
   let WIDTH = $state(MAX_WIDTH);
   let HEIGHT = $derived(WIDTH * ASPECT_RATIO);
@@ -67,11 +66,8 @@
     window.addEventListener("resize", updateDimensions);
 
     // Sample initial points once
-    const start = performance.now();
     sampleInitialPoints();
     initializePhaseSpace();
-    const end = performance.now();
-    debounceDelay = end - start;
 
     return () => {
       window.removeEventListener("resize", updateDimensions);
@@ -182,32 +178,9 @@
     }
   }
 
-  function debounce<T extends (...args: any[]) => void>(
-    func: T,
-    delay: number | (() => number) = 300
-  ): (...args: Parameters<T>) => void {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    return (...args: Parameters<T>) => {
-      clearTimeout(timeoutId);
-      const actualDelay = typeof delay === 'function' ? delay() : delay;
-      timeoutId = setTimeout(() => {
-        func(...args);
-      }, actualDelay);
-    };
-  }
-
-  // Debounced update function for k
-  const updateK = debounce(
-    (value: number) => {
-      k = value;
-    },
-    () => debounceDelay
-  );
-
   function handleSliderInput(event: Event) {
     const value = parseFloat((event.target as HTMLInputElement).value);
-    // k = value; // Immediate update
-    updateK(value); // Debounced update
+    k = value; // Immediate update
   }
 
   function isWithinPhaseBounds(x: number, y: number): boolean {
