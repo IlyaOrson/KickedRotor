@@ -87,10 +87,16 @@
     };
   });
 
-  // Colors for trajectories
+  // Colors for trajectories (skipping the green range [75, 165] to reserve green for interactive points)
   const colors = Array(NUM_TRAJECTORIES)
     .fill(0)
-    .map((_, i) => `hsl(${(i * 360) / NUM_TRAJECTORIES}, 80%, 60%)`);
+    .map((_, i) => {
+      let hue = (i * 270) / NUM_TRAJECTORIES;
+      if (hue >= 75) {
+        hue += 90;
+      }
+      return `hsl(${hue}, 80%, 60%)`;
+    });
 
   // Helper functions
   function mod(n: number, m: number): number {
@@ -435,119 +441,121 @@
     </div>
     {#if isReadmeExpanded}
       <div class="rotor-explorer">
-        <div class="trajectories-explorer">
-          <h3 class="trajectories-title">Positions after kicks</h3>
-          <div
-            class="phase-space-container"
-            onclick={handleCanvasClick}
-            onkeydown={handleCanvasKeydown}
-            role="button"
-            tabindex="0"
-            aria-label="Interactive phase space plot. Click to spawn a trajectory, or use arrow keys to navigate and Enter or Space to run."
-          >
-            <PhaseSpace
-              width={explorerWidth}
-              height={explorerHeight}
-              axisMargin={MARGIN}
-              topMargin={TOP_MARGIN}
-              rightMargin={MARGIN}
-              trajectories={null}
-              colors={null}
-              {clickTrajectory}
-              {animationPoints}
-            />
+        <div class="explorer-grid">
+          <div class="trajectories-explorer">
+            <h3 class="trajectories-title">Positions after kicks</h3>
+            <div
+              class="phase-space-container"
+              onclick={handleCanvasClick}
+              onkeydown={handleCanvasKeydown}
+              role="button"
+              tabindex="0"
+              aria-label="Interactive phase space plot. Click to spawn a trajectory, or use arrow keys to navigate and Enter or Space to run."
+            >
+              <PhaseSpace
+                width={explorerWidth}
+                height={explorerHeight}
+                axisMargin={MARGIN}
+                topMargin={TOP_MARGIN}
+                rightMargin={MARGIN}
+                trajectories={null}
+                colors={null}
+                {clickTrajectory}
+                {animationPoints}
+              />
+            </div>
+          </div>
+
+          <div class="controls-explorer">
+            <h3 class="controls-title">Initial position</h3>
+            <div class="controls-grid">
+              <div class="rotor-container">
+                <Rotor
+                  theta={currentRotorState.theta}
+                  p={currentRotorState.p}
+                  {k}
+                  size={rotorSize}
+                />
+              </div>
+              <div class="parameters-container">
+                 <!-- Sliders update the initial state and trigger new trajectory -->
+                <div class="parameter-group">
+                  <div class="parameter-label">
+                    Angle<br />θ = {selectedTheta.toFixed(2)}
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max={TWO_PI}
+                    step="0.01"
+                    bind:value={selectedTheta}
+                    aria-label="Theta parameter"
+                  />
+                </div>
+                <div class="parameter-group">
+                  <div class="parameter-label">
+                    Momentum<br />p = {selectedP.toFixed(2)}
+                  </div>
+                  <input
+                    type="range"
+                    min={-PI}
+                    max={PI}
+                    step="0.01"
+                    bind:value={selectedP}
+                    aria-label="P parameter"
+                  />
+                </div>
+                <div class="parameter-group">
+                  <div class="parameter-label">
+                    Kick<br />K = {k.toFixed(2)}
+                  </div>
+                  <input
+                    id="k-param-readme"
+                    type="range"
+                    min="0"
+                    max="5"
+                    step="0.02"
+                    bind:value={k}
+                    aria-label="K parameter"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Speed Control (Centered under both rotor and parameters) -->
+            <button class="speed-button" onclick={toggleSpeed}>
+              {isSlowMode ? "Speed Up" : "Slow Down"}
+            </button>
           </div>
         </div>
 
-        <div class="controls-explorer">
-          <h3 class="controls-title">Initial position</h3>
-          <div class="controls-grid">
-            <div class="rotor-container">
-              <Rotor
-                theta={currentRotorState.theta}
-                p={currentRotorState.p}
-                {k}
-                size={rotorSize}
-              />
-            </div>
-            <div class="parameters-container">
-               <!-- Sliders update the initial state and trigger new trajectory -->
-              <div class="parameter-group">
-                <div class="parameter-label">
-                  Angle<br />θ = {selectedTheta.toFixed(2)}
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max={TWO_PI}
-                  step="0.01"
-                  bind:value={selectedTheta}
-                  aria-label="Theta parameter"
-                />
-              </div>
-              <div class="parameter-group">
-                <div class="parameter-label">
-                  Momentum<br />p = {selectedP.toFixed(2)}
-                </div>
-                <input
-                  type="range"
-                  min={-PI}
-                  max={PI}
-                  step="0.01"
-                  bind:value={selectedP}
-                  aria-label="P parameter"
-                />
-              </div>
-              <div class="parameter-group">
-                <div class="parameter-label">
-                  Kick<br />K = {k.toFixed(2)}
-                </div>
-                <input
-                  id="k-param-readme"
-                  type="range"
-                  min="0"
-                  max="5"
-                  step="0.02"
-                  bind:value={k}
-                  aria-label="K parameter"
-                />
-              </div>
-            </div>
+        <!-- Lyapunov Exponent Chaos Diagnostic Widget (Centered below both plot and diagram) -->
+        <div class="lyapunov-widget" style="margin-top: 1rem;">
+          <div class="lyapunov-header">
+            <span class="lyapunov-title">Chaos Diagnostic (Lyapunov Exponent)</span>
+            <span class="lyapunov-value" class:chaotic={lyapunovData.lambda > 0.1} class:regular={lyapunovData.lambda <= 0.1}>
+              λ ≈ {lyapunovData.lambda.toFixed(3)} 
+              ({lyapunovData.lambda > 0.1 ? 'Chaotic' : 'Orderly'})
+            </span>
           </div>
-
-          <!-- Speed Control (Centered under both rotor and parameters) -->
-          <button class="speed-button" onclick={toggleSpeed}>
-            {isSlowMode ? "Speed Up" : "Slow Down"}
-          </button>
-
-          <!-- Lyapunov Exponent Chaos Diagnostic Widget (Centered under controls) -->
-          <div class="lyapunov-widget" style="margin-top: 1rem;">
-            <div class="lyapunov-header">
-              <span class="lyapunov-title">Chaos Diagnostic (Lyapunov Exponent)</span>
-              <span class="lyapunov-value" class:chaotic={lyapunovData.lambda > 0.1} class:regular={lyapunovData.lambda <= 0.1}>
-                λ ≈ {lyapunovData.lambda.toFixed(3)} 
-                ({lyapunovData.lambda > 0.1 ? 'Chaotic' : 'Orderly'})
-              </span>
-            </div>
-            
-            {#if lyapunovData.history.length > 0}
-              {@const path = getSparklinePath(lyapunovData.history)}
-              {@const zeroY = getZeroY(lyapunovData.history)}
-              <div class="sparkline-container">
-                <svg class="sparkline" viewBox="0 0 200 40">
-                  {#if zeroY !== null}
-                    <line x1="0" y1={zeroY} x2="200" y2={zeroY} class="baseline" />
-                  {/if}
-                  <path d={path} class="sparkpath" />
-                </svg>
-                <div class="sparkline-labels">
-                  <span>Kick 1</span>
-                  <span>Convergence over 200 kicks</span>
-                  <span>Kick 200</span>
-                </div>
+          
+          {#if lyapunovData.history.length > 0}
+            {@const path = getSparklinePath(lyapunovData.history)}
+            {@const zeroY = getZeroY(lyapunovData.history)}
+            <div class="sparkline-container">
+              <svg class="sparkline" viewBox="0 0 200 40">
+                {#if zeroY !== null}
+                  <line x1="0" y1={zeroY} x2="200" y2={zeroY} class="baseline" />
+                {/if}
+                <path d={path} class="sparkpath" />
+              </svg>
+              <div class="sparkline-labels">
+                <span>Kick 1</span>
+                <span>Convergence over 200 kicks</span>
+                <span>Kick 200</span>
               </div>
-            {/if}
-          </div>
+            </div>
+          {/if}
         </div>
       </div>
       <div class="readme-content">
@@ -587,15 +595,12 @@
     text-align: center;
     position: relative;
     z-index: 10;
-    text-shadow:
-      /* 0 0 10px #00ff88, */
-      0 0 20px #00ff88,
-      0 0 30px #00ff88;
+    text-shadow: 0 0 12px rgba(0, 255, 136, 0.65);
   }
 
   .subtitle {
     font-family: "Chakra Petch", monospace;
-    color: #00ff88;
+    color: #00ffff;
     font-size: clamp(0.6rem, 2vw, 1rem);
     margin: 0;
     text-align: center;
@@ -636,6 +641,7 @@
     gap: 1rem;
     align-items: center;
     width: 100%;
+    margin-top: 2rem;
   }
 
   .parameter-control {
@@ -709,6 +715,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-top: 2.5rem;
   }
 
   .toggle-button {
@@ -784,20 +791,26 @@
   .rotor-explorer {
     display: flex;
     flex-direction: column;
+    align-items: center;
     margin-top: 1rem;
-    /* padding: 1rem; */
-    border-radius: 0.5rem;
+    width: 100%;
+    gap: 2rem;
+  }
+
+  .explorer-grid {
+    display: flex;
+    flex-direction: column;
     width: 100%;
     gap: 2rem;
   }
 
   @media (min-width: 1024px) {
-    .rotor-explorer {
+    .explorer-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 2.5rem;
       align-items: start;
-      max-width: 100%;
+      width: 100%;
     }
     .readme-widget {
       max-width: 1200px;
@@ -904,7 +917,22 @@
     border-radius: 0.75rem;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
     width: 100%;
+    text-align: center;
+  }
+
+  .readme-content :global(ul),
+  .readme-content :global(ol) {
+    display: inline-block;
     text-align: left;
+    margin: 0.5rem auto;
+  }
+
+  .readme-content :global(p),
+  .readme-content :global(h1),
+  .readme-content :global(h2),
+  .readme-content :global(h3),
+  .readme-content :global(h4) {
+    text-align: center;
   }
 
   @media (min-width: 768px) {
@@ -960,7 +988,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    margin-top: 1rem;
+    margin-top: 2rem;
+    align-self: center;
     transition: all 0.3s ease;
   }
 
