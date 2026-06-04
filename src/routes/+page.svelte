@@ -595,7 +595,7 @@
     text-align: center;
     position: relative;
     z-index: 10;
-    text-shadow: 0 0 12px rgba(0, 255, 136, 0.65);
+    text-shadow: 0 0 15px rgba(0, 255, 136, 0.85), 0 0 25px rgba(0, 255, 136, 0.4);
   }
 
   .subtitle {
