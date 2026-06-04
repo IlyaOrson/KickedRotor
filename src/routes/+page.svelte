@@ -457,35 +457,6 @@
               {animationPoints}
             />
           </div>
-
-          <!-- Lyapunov Exponent Chaos Diagnostic Widget (Placed under canvas) -->
-          <div class="lyapunov-widget" style="margin-top: 1rem;">
-            <div class="lyapunov-header">
-              <span class="lyapunov-title">Chaos Diagnostic (Lyapunov Exponent)</span>
-              <span class="lyapunov-value" class:chaotic={lyapunovData.lambda > 0.1} class:regular={lyapunovData.lambda <= 0.1}>
-                λ ≈ {lyapunovData.lambda.toFixed(3)} 
-                ({lyapunovData.lambda > 0.1 ? 'Chaotic' : 'Orderly'})
-              </span>
-            </div>
-            
-            {#if lyapunovData.history.length > 0}
-              {@const path = getSparklinePath(lyapunovData.history)}
-              {@const zeroY = getZeroY(lyapunovData.history)}
-              <div class="sparkline-container">
-                <svg class="sparkline" viewBox="0 0 200 40">
-                  {#if zeroY !== null}
-                    <line x1="0" y1={zeroY} x2="200" y2={zeroY} class="baseline" />
-                  {/if}
-                  <path d={path} class="sparkpath" />
-                </svg>
-                <div class="sparkline-labels">
-                  <span>Kick 1</span>
-                  <span>Convergence over 200 kicks</span>
-                  <span>Kick 200</span>
-                </div>
-              </div>
-            {/if}
-          </div>
         </div>
 
         <div class="controls-explorer">
@@ -541,11 +512,41 @@
                   aria-label="K parameter"
                 />
               </div>
-               <!-- Speed Control -->
-               <button class="speed-button" onclick={toggleSpeed}>
-                 {isSlowMode ? "Speed Up" : "Slow Down"}
-               </button>
             </div>
+          </div>
+
+          <!-- Speed Control (Centered under both rotor and parameters) -->
+          <button class="speed-button" onclick={toggleSpeed}>
+            {isSlowMode ? "Speed Up" : "Slow Down"}
+          </button>
+
+          <!-- Lyapunov Exponent Chaos Diagnostic Widget (Centered under controls) -->
+          <div class="lyapunov-widget" style="margin-top: 1rem;">
+            <div class="lyapunov-header">
+              <span class="lyapunov-title">Chaos Diagnostic (Lyapunov Exponent)</span>
+              <span class="lyapunov-value" class:chaotic={lyapunovData.lambda > 0.1} class:regular={lyapunovData.lambda <= 0.1}>
+                λ ≈ {lyapunovData.lambda.toFixed(3)} 
+                ({lyapunovData.lambda > 0.1 ? 'Chaotic' : 'Orderly'})
+              </span>
+            </div>
+            
+            {#if lyapunovData.history.length > 0}
+              {@const path = getSparklinePath(lyapunovData.history)}
+              {@const zeroY = getZeroY(lyapunovData.history)}
+              <div class="sparkline-container">
+                <svg class="sparkline" viewBox="0 0 200 40">
+                  {#if zeroY !== null}
+                    <line x1="0" y1={zeroY} x2="200" y2={zeroY} class="baseline" />
+                  {/if}
+                  <path d={path} class="sparkpath" />
+                </svg>
+                <div class="sparkline-labels">
+                  <span>Kick 1</span>
+                  <span>Convergence over 200 kicks</span>
+                  <span>Kick 200</span>
+                </div>
+              </div>
+            {/if}
           </div>
         </div>
       </div>
@@ -746,6 +747,7 @@
       font-size: 0.7rem;
       margin-top: 1rem;
       width: 100%;
+      max-width: 200px;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 0 10px rgba(255, 165, 0, 0.1);
       text-shadow: 0 0 4px rgba(255, 165, 0, 0.2);
@@ -792,8 +794,8 @@
   @media (min-width: 1024px) {
     .rotor-explorer {
       display: grid;
-      grid-template-columns: 1fr 1.2fr;
-      gap: 2rem;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5rem;
       align-items: start;
       max-width: 100%;
     }
@@ -838,14 +840,15 @@
   .controls-explorer {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 1rem;
-    padding: 1.5rem;
-    background: rgba(26, 26, 46, 0.4);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 0.75rem;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+    padding: 0;
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    box-shadow: none;
+    width: 100%;
   }
 
   .rotor-container {
