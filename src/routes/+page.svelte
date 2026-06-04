@@ -252,10 +252,7 @@
     }
   }
 
-  function handleSliderInput(event: Event) {
-    const value = parseFloat((event.target as HTMLInputElement).value);
-    k = value; // Immediate update
-  }
+
 
   function isWithinPhaseBounds(x: number, y: number, currentWidth: number, currentHeight: number): boolean {
     return (
@@ -353,6 +350,8 @@
 
 <svelte:head>
   <title>The Kicked Rotor - A Chaotic Playground!</title>
+  <meta name="description" content="Interactive physics simulator exploring chaos theory, phase space maps, Chirikov standard map, KAM tori, and Lyapunov exponents." />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFWUpFj39CbVXPk+oDX5TqpEvKBpsC1OYpaJgG4" crossorigin="anonymous">
 </svelte:head>
 <div class="kicked-rotor">
   <!-- <h1 class="title">The Kicked Rotor</h1> -->
@@ -386,7 +385,13 @@
     <div class="lyapunov-widget">
       <div class="lyapunov-header">
         <span class="lyapunov-title">Chaos Diagnostic (Lyapunov Exponent)</span>
-        <span class="lyapunov-value" class:chaotic={lyapunovData.lambda > 0.1} class:regular={lyapunovData.lambda <= 0.1}>
+        <span 
+          class="lyapunov-value" 
+          class:chaotic={lyapunovData.lambda > 0.1} 
+          class:regular={lyapunovData.lambda <= 0.1}
+          aria-live="polite"
+          role="status"
+        >
           λ ≈ {lyapunovData.lambda.toFixed(3)} 
           ({lyapunovData.lambda > 0.1 ? 'Chaotic' : 'Orderly'})
         </span>
@@ -420,8 +425,7 @@
           min="0"
           max="5"
           step="0.02"
-          value={k}
-          oninput={handleSliderInput}
+          bind:value={k}
           aria-label="K parameter"
         />
       </div>
@@ -533,7 +537,13 @@
         <div class="lyapunov-widget" style="margin-top: 1rem;">
           <div class="lyapunov-header">
             <span class="lyapunov-title">Chaos Diagnostic (Lyapunov Exponent)</span>
-            <span class="lyapunov-value" class:chaotic={lyapunovData.lambda > 0.1} class:regular={lyapunovData.lambda <= 0.1}>
+            <span 
+              class="lyapunov-value" 
+              class:chaotic={lyapunovData.lambda > 0.1} 
+              class:regular={lyapunovData.lambda <= 0.1}
+              aria-live="polite"
+              role="status"
+            >
               λ ≈ {lyapunovData.lambda.toFixed(3)} 
               ({lyapunovData.lambda > 0.1 ? 'Chaotic' : 'Orderly'})
             </span>
@@ -566,9 +576,7 @@
 </div>
 
 <style>
-  /* Workaround to render equations from a markdown file */
-  /* https://github.com/pngwn/MDsveX/issues/302#issuecomment-1041293000  */
-  @import url("https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css");
+
 
   @import url("https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Press+Start+2P&display=swap");
 
@@ -600,7 +608,7 @@
 
   .subtitle {
     font-family: "Chakra Petch", monospace;
-    color: #00ffff;
+    color: #ffa500;
     font-size: clamp(0.6rem, 2vw, 1rem);
     margin: 0;
     text-align: center;
