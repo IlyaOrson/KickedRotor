@@ -31,6 +31,12 @@
   let p1X = $derived(originX - k * Math.cos(theta) * Math.cos(theta) * vectorScale);
   let p1Y = $derived(originY + k * Math.cos(theta) * Math.sin(theta) * vectorScale);
   
+  // Midpoints for labels
+  let radialMidX = $derived((originX + p1X) / 2);
+  let radialMidY = $derived((originY + p1Y) / 2);
+  
+  let tangentialMidX = $derived((p1X + endX) / 2);
+  let tangentialMidY = $derived((p1Y + endY) / 2);
 </script>
 
 <div class="decomposition-container">
@@ -96,8 +102,31 @@
         />
         
         <!-- Labels -->
-        <text x={endX - 15} y={endY - 5} class="label">K</text>
+        <text x={endX - 12} y={endY - 6} class="label total-k">K</text>
         
+        {#if k > 0.1}
+          <!-- Radial component label -->
+          <text 
+            x={radialMidX + 12 * Math.sin(theta)} 
+            y={radialMidY + 12 * Math.cos(theta)} 
+            class="label component-label radial"
+            text-anchor="middle"
+            dominant-baseline="middle"
+          >
+            K cos(θ)
+          </text>
+          
+          <!-- Tangential component label -->
+          <text 
+            x={tangentialMidX - 12 * Math.cos(theta)} 
+            y={tangentialMidY + 12 * Math.sin(theta)} 
+            class="label component-label tangential"
+            text-anchor="middle"
+            dominant-baseline="middle"
+          >
+            K sin(θ)
+          </text>
+        {/if}
     </svg>
 </div>
 
@@ -144,5 +173,21 @@
         fill: #ffa500;
         font-family: "Courier New", monospace;
         font-size: 12px;
+    }
+
+    .component-label {
+        font-size: 10px;
+        font-weight: 500;
+        opacity: 0.85;
+    }
+
+    .radial {
+        fill: #8a8a9a;
+    }
+
+    .tangential {
+        fill: #00ffff;
+        font-weight: bold;
+        text-shadow: 0 0 4px rgba(0, 255, 255, 0.4);
     }
 </style>

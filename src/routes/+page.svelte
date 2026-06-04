@@ -47,6 +47,14 @@
   let explorerHeight = $derived(explorerWidth * ASPECT_RATIO);
   let rotorSize = $derived(isReadmeExpanded ? Math.min(WIDTH * 0.35, 240) : (WIDTH * 7) / 16);
 
+  // Compute Lyapunov Exponent diagnostics reactively based on active position and K
+  let lyapunovData = $derived.by(() => {
+    if (selectedTheta !== undefined && selectedP !== undefined) {
+      return calculateLyapunov(selectedTheta, selectedP, 200);
+    }
+    return { lambda: 0, history: [] };
+  });
+
   let selectedTheta = $state(3.77);
   let selectedP = $state(-1.03);
 
@@ -101,6 +109,61 @@
     // Inverse of toSVGCoords for y
     const p = ((y - TOP_MARGIN) / (currentHeight - MARGIN - TOP_MARGIN)) * TWO_PI - PI;
     return [theta, p];
+  }
+
+  // Lyapunov Exponent Calculator (using the standard perturbation renormalization method)
+  function calculateLyapunov(initialTheta: number, initialP: number, steps = 200): { lambda: number; history: number[] } {
+    const d0 = 1e-8;
+    let [theta, p] = [initialTheta, initialP];
+    let dTheta = d0;
+    let dP = 0;
+    let sumLogDivergence = 0;
+    const history: number[] = [];
+    
+    for (let i = 1; i <= steps; i++) {
+      const [nextTheta, nextP] = nextState(theta, p);
+      const [nextThetaPert, nextPPert] = nextState(theta + dTheta, p + dP);
+      
+      const diffTheta = mod(nextThetaPert - nextTheta + PI, TWO_PI) - PI;
+      const diffP = mod(nextPPert - nextP + PI, TWO_PI) - PI;
+      const d1 = Math.sqrt(diffTheta * diffTheta + diffP * diffP);
+      
+      if (d1 > 0) {
+        sumLogDivergence += Math.log(d1 / d0);
+        dTheta = d0 * (diffTheta / d1);
+        dP = d0 * (diffP / d1);
+      } else {
+        dTheta = d0;
+        dP = 0;
+      }
+      
+      history.push(sumLogDivergence / i);
+      [theta, p] = [nextTheta, nextP];
+    }
+    
+    return { lambda: sumLogDivergence / steps, history };
+  }
+
+  function getSparklinePath(history: number[]): string {
+    if (history.length === 0) return "";
+    const minVal = Math.min(...history, 0);
+    const maxVal = Math.max(...history, 0.5);
+    const range = maxVal - minVal;
+    
+    return history.map((val, i) => {
+      const x = (i / (history.length - 1)) * 200;
+      const y = 40 - ((val - minVal) / range) * 40;
+      return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    }).join(" ");
+  }
+
+  function getZeroY(history: number[]): number | null {
+    if (history.length === 0) return null;
+    const minVal = Math.min(...history, 0);
+    const maxVal = Math.max(...history, 0.5);
+    const range = maxVal - minVal;
+    if (range === 0) return 20;
+    return 40 - ((0 - minVal) / range) * 40;
   }
 
   function generateTrajectory(
@@ -328,6 +391,35 @@
           aria-label="K parameter"
         />
       </div>
+
+      <!-- Lyapunov Exponent Chaos Diagnostic Widget -->
+      <div class="lyapunov-widget">
+        <div class="lyapunov-header">
+          <span class="lyapunov-title">Chaos Diagnostic (Lyapunov Exponent)</span>
+          <span class="lyapunov-value" class:chaotic={lyapunovData.lambda > 0.1} class:regular={lyapunovData.lambda <= 0.1}>
+            λ ≈ {lyapunovData.lambda.toFixed(3)} 
+            ({lyapunovData.lambda > 0.1 ? 'Chaotic' : 'Orderly'})
+          </span>
+        </div>
+        
+        {#if lyapunovData.history.length > 0}
+          {@const path = getSparklinePath(lyapunovData.history)}
+          {@const zeroY = getZeroY(lyapunovData.history)}
+          <div class="sparkline-container">
+            <svg class="sparkline" viewBox="0 0 200 40">
+              {#if zeroY !== null}
+                <line x1="0" y1={zeroY} x2="200" y2={zeroY} class="baseline" />
+              {/if}
+              <path d={path} class="sparkpath" />
+            </svg>
+            <div class="sparkline-labels">
+              <span>Kick 1</span>
+              <span>Convergence over 200 kicks</span>
+              <span>Kick 200</span>
+            </div>
+          </div>
+        {/if}
+      </div>
     </div>
   {/if}
   <div class="readme-widget">
@@ -435,6 +527,34 @@
                <button class="speed-button" onclick={toggleSpeed}>
                  {isSlowMode ? "Speed Up" : "Slow Down"}
                </button>
+
+               <!-- Lyapunov Exponent Chaos Diagnostic Widget (Compact) -->
+               <div class="lyapunov-widget compact">
+                 <div class="lyapunov-header">
+                   <span class="lyapunov-title">Chaos Diagnostic</span>
+                   <span class="lyapunov-value" class:chaotic={lyapunovData.lambda > 0.1} class:regular={lyapunovData.lambda <= 0.1}>
+                     λ ≈ {lyapunovData.lambda.toFixed(3)}
+                   </span>
+                 </div>
+                 
+                 {#if lyapunovData.history.length > 0}
+                   {@const path = getSparklinePath(lyapunovData.history)}
+                   {@const zeroY = getZeroY(lyapunovData.history)}
+                   <div class="sparkline-container">
+                     <svg class="sparkline" viewBox="0 0 200 40">
+                       {#if zeroY !== null}
+                         <line x1="0" y1={zeroY} x2="200" y2={zeroY} class="baseline" />
+                       {/if}
+                       <path d={path} class="sparkpath" />
+                     </svg>
+                     <div class="sparkline-labels">
+                       <span>Kick 1</span>
+                       <span>200 kicks</span>
+                       <span>Kick 200</span>
+                     </div>
+                   </div>
+                 {/if}
+               </div>
             </div>
           </div>
         </div>
@@ -830,5 +950,107 @@
 
   :global(a:active) {
     color: #00ffff;
+  }
+
+  /* Lyapunov Exponent Diagnostic styles */
+  .lyapunov-widget {
+    background: rgba(26, 26, 46, 0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    width: 100%;
+    max-width: 320px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .lyapunov-widget.compact {
+    max-width: 200px;
+    padding: 0.8rem;
+    margin-top: 1rem;
+  }
+
+  .lyapunov-widget.compact .lyapunov-title {
+    font-size: 0.65rem;
+  }
+
+  .lyapunov-widget.compact .lyapunov-value {
+    font-size: 0.65rem;
+  }
+
+  .lyapunov-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: center;
+  }
+
+  .lyapunov-title {
+    font-size: 0.75rem;
+    color: #8a8a9a;
+    font-family: "Chakra Petch", sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .lyapunov-value {
+    font-family: "Press Start 2P", monospace;
+    font-size: 0.7rem;
+    font-weight: bold;
+    transition: all 0.3s ease;
+  }
+
+  .lyapunov-value.chaotic {
+    color: #ff3864;
+    text-shadow: 0 0 8px rgba(255, 56, 100, 0.4);
+  }
+
+  .lyapunov-value.regular {
+    color: #00ff88;
+    text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+  }
+
+  .sparkline-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+  }
+
+  .sparkline {
+    width: 100%;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 0.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+  }
+
+  .sparkpath {
+    fill: none;
+    stroke: #ff00ff;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 2px #ff00ff);
+  }
+
+  .baseline {
+    stroke: rgba(255, 255, 255, 0.15);
+    stroke-dasharray: 3 3;
+    stroke-width: 1;
+  }
+
+  .sparkline-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6rem;
+    color: #6a6a7a;
+    font-family: "Chakra Petch", sans-serif;
   }
 </style>
