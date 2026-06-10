@@ -351,7 +351,7 @@
 <svelte:head>
   <title>The Kicked Rotor - A Chaotic Playground!</title>
   <meta name="description" content="Interactive physics simulator exploring chaos theory, phase space maps, Chirikov standard map, KAM tori, and Lyapunov exponents." />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFWUpFj39CbVXPk+oDX5TqpEvKBpsC1OYpaJgG4" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
 </svelte:head>
 <div class="kicked-rotor">
   <!-- <h1 class="title">The Kicked Rotor</h1> -->
